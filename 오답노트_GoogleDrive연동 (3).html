@@ -1,0 +1,2534 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>수학 오답노트 시스템</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap');
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --primary:#1e40af;--primary-light:#dbeafe;--primary-mid:#3b82f6;
+    --red:#dc2626;--red-light:#fee2e2;
+    --green:#16a34a;--green-light:#dcfce7;
+    --amber:#d97706;--amber-light:#fef3c7;
+    --gray:#6b7280;--gray-light:#f3f4f6;--gray-border:#e5e7eb;
+    --text:#111827;--text-sub:#6b7280;--bg:#f9fafb;
+    --shadow:0 1px 3px rgba(0,0,0,.1),0 1px 2px rgba(0,0,0,.06);
+    --shadow-md:0 4px 6px -1px rgba(0,0,0,.1);
+    --radius:8px;--radius-lg:12px;
+  }
+  body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+  /* Header */
+  .header{background:#fff;border-bottom:1px solid var(--gray-border);padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+  .logo{display:flex;align-items:center;gap:10px}
+  .logo-icon{width:32px;height:32px;background:var(--primary);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px}
+  .logo-text{font-size:16px;font-weight:700;color:var(--text)}
+  .logo-sub{font-size:11px;color:var(--text-sub);margin-top:1px}
+  .header-actions{display:flex;gap:8px;align-items:center}
+
+  /* Nav tabs */
+  .nav{background:#fff;border-bottom:1px solid var(--gray-border);padding:0 24px;display:flex;gap:0}
+  .nav-tab{padding:14px 20px;font-size:13px;font-weight:500;color:var(--text-sub);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;background:none;border-left:none;border-right:none;border-top:none}
+  .nav-tab:hover{color:var(--text)}
+  .nav-tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+
+  /* Layout */
+  .main{padding:24px;max-width:1100px;margin:0 auto}
+
+  /* Cards */
+  .card{background:#fff;border:1px solid var(--gray-border);border-radius:var(--radius-lg);padding:20px;margin-bottom:16px;box-shadow:var(--shadow)}
+  .card-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+  .card-title .icon{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px}
+
+  /* Buttons */
+  .btn{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 16px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--gray-border);background:#fff;color:var(--text);transition:all .15s;font-family:inherit}
+  .btn:hover{background:var(--gray-light)}
+  .btn-primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+  .btn-primary:hover{background:#1e3a8a}
+  .btn-sm{height:28px;padding:0 10px;font-size:12px}
+  .btn-red{color:var(--red);border-color:#fca5a5}
+  .btn-red:hover{background:var(--red-light)}
+  .btn-green{background:var(--green);color:#fff;border-color:var(--green)}
+  .btn-green:hover{background:#15803d}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+
+  /* Grid */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+
+  /* Upload zone */
+  .upload-zone{border:2px dashed var(--gray-border);border-radius:var(--radius-lg);padding:40px 20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--gray-light)}
+  .upload-zone:hover,.upload-zone.drag{border-color:var(--primary-mid);background:var(--primary-light)}
+  .upload-zone .upload-icon{font-size:36px;margin-bottom:12px}
+  .upload-zone h3{font-size:15px;font-weight:600;margin-bottom:6px}
+  .upload-zone p{font-size:12px;color:var(--text-sub)}
+  .preview-img{width:100%;border-radius:var(--radius);border:1px solid var(--gray-border);object-fit:contain;max-height:320px;background:#f9fafb}
+
+  /* Student selector */
+  .student-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+  .chip{padding:6px 14px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1.5px solid var(--gray-border);background:#fff;color:var(--text-sub);transition:all .15s}
+  .chip:hover{border-color:var(--primary-mid)}
+  .chip.active{border-color:var(--primary);background:var(--primary-light);color:var(--primary)}
+  .chip-add{border-style:dashed}
+
+  /* Form elements */
+  .form-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px}
+  .form-group{display:flex;flex-direction:column;gap:4px}
+  .form-group label{font-size:11px;font-weight:600;color:var(--text-sub);text-transform:uppercase;letter-spacing:.04em}
+  .form-group input,.form-group select,.form-group textarea{
+    font-family:inherit;font-size:13px;color:var(--text);
+    background:#fff;border:1px solid var(--gray-border);border-radius:var(--radius);
+    padding:0 10px;height:36px;transition:border .15s
+  }
+  .form-group textarea{height:auto;padding:8px 10px;resize:vertical}
+  .form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--primary-mid)}
+
+  /* AI analysis result */
+  .ai-result{background:linear-gradient(135deg,#eff6ff,#f0fdf4);border:1px solid #93c5fd;border-radius:var(--radius-lg);padding:16px}
+  .ai-label{font-size:11px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+  .ai-badge{display:inline-block;background:var(--primary);color:#fff;font-size:10px;padding:1px 6px;border-radius:3px}
+
+  /* Entry cards */
+  .entry-card{border:1px solid var(--gray-border);border-radius:var(--radius);padding:14px;margin-bottom:10px;background:#fff;position:relative}
+  .entry-card:hover{border-color:#93c5fd}
+  .entry-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .entry-tags{display:flex;gap:6px;flex-wrap:wrap}
+  .tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500}
+  .tag-unit{background:#ede9fe;color:#5b21b6}
+  .tag-type{background:#fee2e2;color:#991b1b}
+  .tag-diff-하{background:#dcfce7;color:#166534}
+  .tag-diff-중{background:#fef3c7;color:#92400e}
+  .tag-diff-상{background:#fee2e2;color:#991b1b}
+  .entry-memo{font-size:12px;color:var(--text-sub);margin-top:6px;padding-top:6px;border-top:1px solid var(--gray-border)}
+  .entry-similar{background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:10px;margin-top:8px;font-size:12px}
+  .entry-similar-title{font-size:11px;font-weight:600;color:var(--green);margin-bottom:4px}
+
+  /* Loading */
+  .loading{display:flex;align-items:center;gap:10px;padding:16px;color:var(--text-sub);font-size:13px}
+  .spinner{width:18px;height:18px;border:2px solid var(--gray-border);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .loading-dots::after{content:'.';animation:dots 1.2s steps(4,end) infinite}
+  @keyframes dots{0%,20%{content:''}40%{content:'.'}60%{content:'..'}80%,100%{content:'...'}}
+
+  /* Stats bar */
+  .stat-bar{display:flex;gap:16px;background:#fff;border:1px solid var(--gray-border);border-radius:var(--radius-lg);padding:16px;margin-bottom:20px}
+  .stat{text-align:center;flex:1}
+  .stat-num{font-size:24px;font-weight:700;color:var(--primary)}
+  .stat-label{font-size:11px;color:var(--text-sub);margin-top:2px}
+
+  /* List table */
+  .tbl{width:100%;border-collapse:collapse;font-size:13px}
+  .tbl th{text-align:left;padding:8px 12px;font-size:11px;font-weight:600;color:var(--text-sub);border-bottom:2px solid var(--gray-border);background:var(--gray-light)}
+  .tbl td{padding:11px 12px;border-bottom:1px solid var(--gray-border);vertical-align:middle}
+  .tbl tr:last-child td{border-bottom:none}
+  .tbl tr:hover td{background:#fafafa}
+
+  /* PDF preview card */
+  .pdf-card{border:2px solid var(--primary);border-radius:var(--radius-lg);overflow:hidden}
+  .pdf-header{background:var(--primary);color:#fff;padding:16px 20px}
+  .pdf-header h2{font-size:18px;font-weight:700}
+  .pdf-header p{font-size:12px;opacity:.8;margin-top:2px}
+  .pdf-body{padding:20px}
+  .pdf-entry{border:1px solid var(--gray-border);border-radius:var(--radius);padding:14px;margin-bottom:10px}
+  .pdf-entry-num{font-size:11px;font-weight:700;color:var(--primary);margin-bottom:6px}
+  .pdf-entry-content{font-size:13px;line-height:1.7}
+  .pdf-entry-similar{background:var(--gray-light);border-radius:6px;padding:10px;margin-top:8px;font-size:12px;line-height:1.7}
+  .pdf-entry-similar b{color:var(--green)}
+  .answer-box{border:1.5px dashed var(--gray-border);border-radius:6px;padding:10px;margin-top:8px;min-height:60px;font-size:12px;color:var(--text-sub)}
+
+  /* Hidden page util */
+  .page{display:none}
+  .page.active{display:block}
+
+  /* Responsive */
+  @media(max-width:700px){
+    .grid2,.grid3{grid-template-columns:1fr}
+    .stat-bar{flex-wrap:wrap}
+  }
+
+  /* Alerts */
+  .alert{border-radius:var(--radius);padding:12px 14px;font-size:13px;margin-bottom:12px;display:flex;align-items:flex-start;gap:8px}
+  .alert-info{background:#eff6ff;border:1px solid #93c5fd;color:#1e40af}
+  .alert-warn{background:var(--amber-light);border:1px solid #fcd34d;color:#92400e}
+  .alert-success{background:var(--green-light);border:1px solid #86efac;color:#166534}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">📝</div>
+    <div>
+      <div class="logo-text">AI 수학 오답노트</div>
+      <div class="logo-sub">개인별 맞춤 오답 분석 시스템</div>
+    </div>
+  </div>
+  <div class="header-actions">
+    <span id="save-badge" style="font-size:11px;color:var(--green);opacity:0;transition:opacity .4s">✅ 저장됨</span>
+    <!-- Google Drive 상태 -->
+    <div id="drive-status" style="display:flex;align-items:center;gap:8px">
+      <div id="drive-user-info" style="display:none;align-items:center;gap:6px;font-size:12px;color:var(--text-sub)">
+        <img id="drive-avatar" style="width:22px;height:22px;border-radius:50%;border:1px solid var(--gray-border)" src="" alt="">
+        <span id="drive-user-name"></span>
+        <span style="color:var(--green);font-weight:600">● 연결됨</span>
+      </div>
+      <button id="drive-login-btn" class="btn btn-sm" onclick="driveLogin()" style="background:#4285f4;color:#fff;border-color:#4285f4;gap:6px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M6 2h12l4 4v16H2V2zm10 0v5h5"/><path d="M6 2h12l4 4v16H2V2z" fill="none" stroke="white" stroke-width="1.5"/></svg>
+        Google Drive 연결
+      </button>
+      <button id="drive-sync-btn" class="btn btn-sm btn-primary" onclick="driveSyncAll()" style="display:none">☁️ 동기화</button>
+      <button id="drive-logout-btn" class="btn btn-sm" onclick="driveLogout()" style="display:none">로그아웃</button>
+    </div>
+    <button class="btn btn-sm" onclick="exportExcel()">⬇️ 엑셀 내보내기</button>
+    <button class="btn btn-sm" onclick="showApiKeyModal()">🔑 API 키 설정</button>
+    <button class="btn btn-primary btn-sm" onclick="switchTab('pdf', document.querySelectorAll('.nav-tab')[4])">📄 PDF 출력</button>
+  </div>
+</div>
+
+<!-- API Key Modal -->
+<div id="api-key-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:var(--radius-lg);padding:24px;width:420px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <h3 style="font-size:15px;font-weight:700;margin-bottom:6px">🔑 Anthropic API 키 설정</h3>
+    <p style="font-size:12px;color:var(--text-sub);margin-bottom:16px;line-height:1.6">
+      AI 기능(사진 분석, 유사문제 생성)을 사용하려면 Anthropic API 키가 필요합니다.<br>
+      키는 브라우저에만 저장되며 외부로 전송되지 않습니다.
+    </p>
+    <div class="form-group" style="margin-bottom:16px">
+      <label>API 키 (sk-ant-... 형식)</label>
+      <input id="api-key-input" type="password" placeholder="sk-ant-api03-..." style="width:100%">
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn" onclick="closeApiKeyModal()">취소</button>
+      <button class="btn btn-primary" onclick="confirmApiKey()">저장</button>
+    </div>
+    <p style="font-size:11px;color:var(--text-sub);margin-top:12px">
+      API 키 발급: <a href="https://console.anthropic.com" target="_blank" style="color:var(--primary)">console.anthropic.com</a>
+    </p>
+  </div>
+</div>
+
+<!-- Google Drive 설정 모달 -->
+<div id="drive-setup-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:var(--radius-lg);padding:28px;width:480px;max-width:92vw;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <h3 style="font-size:16px;font-weight:700;margin-bottom:6px">☁️ Google Drive 연동 설정</h3>
+    <p style="font-size:12px;color:var(--text-sub);margin-bottom:18px;line-height:1.7">
+      데이터를 Google Drive에 저장하려면 Google Cloud Console에서<br>
+      OAuth 클라이언트 ID를 발급받아 아래에 입력해 주세요.
+    </p>
+    <div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:var(--radius);padding:12px 14px;margin-bottom:16px;font-size:12px;color:#1e40af;line-height:1.8">
+      <b>📋 설정 방법 (5단계, 약 10분)</b><br>
+      1. <a href="https://console.cloud.google.com" target="_blank" style="color:var(--primary)">console.cloud.google.com</a> 접속 → 새 프로젝트 생성<br>
+      2. API 및 서비스 → 라이브러리 → <b>Google Drive API</b> 사용 설정<br>
+      3. OAuth 동의 화면 → 외부 → 앱 이름 입력 후 저장<br>
+      4. 사용자 인증 정보 → OAuth 클라이언트 ID → <b>웹 애플리케이션</b><br>
+      5. 승인된 JS 출처에 <code style="background:#dbeafe;padding:1px 5px;border-radius:3px">http://localhost</code> 추가 → 클라이언트 ID 복사
+    </div>
+    <div class="form-group" style="margin-bottom:16px">
+      <label>Google OAuth 클라이언트 ID</label>
+      <input id="drive-client-id-input" type="text" placeholder="123456789-abc....apps.googleusercontent.com" style="width:100%;font-size:12px">
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn" onclick="document.getElementById('drive-setup-modal').style.display='none'">취소</button>
+      <button class="btn btn-primary" onclick="saveDriveClientId()">저장 후 연결</button>
+    </div>
+  </div>
+</div>
+
+<nav class="nav">
+  <button class="nav-tab active" onclick="switchTab('upload',this)">📸 시험지 분석</button>
+  <button class="nav-tab" onclick="switchTab('manual',this)">✏️ 직접 입력</button>
+  <button class="nav-tab" onclick="switchTab('books',this)">📚 교재 보관함</button>
+  <button class="nav-tab" onclick="switchTab('library',this)">🗂️ 시험지 보관함</button>
+  <button class="nav-tab" onclick="switchTab('excel',this)">📊 엑셀 업로드</button>
+  <button class="nav-tab" onclick="switchTab('students',this)">👤 학생별 관리</button>
+  <button class="nav-tab" onclick="switchTab('manage',this)">📋 오답 목록</button>
+  <button class="nav-tab" onclick="switchTab('pdf',this)">📄 PDF 생성</button>
+</nav>
+
+<div class="main">
+
+<!-- ===== TAB 1: 시험지 분석 ===== -->
+<div id="tab-upload" class="page active">
+  <div class="grid2">
+    <div>
+      <!-- 학생 선택 -->
+      <div class="card">
+        <div class="card-title"><span class="icon" style="background:#dbeafe">👤</span>학생 선택</div>
+        <div class="student-chips" id="student-chips-upload"></div>
+        <div style="display:flex;gap:8px;margin-top:4px">
+          <select id="new-grade-up" style="height:32px;padding:0 6px;border:1px solid var(--gray-border);border-radius:var(--radius);font-family:inherit;font-size:13px;width:70px">
+            <option>초1</option><option>초2</option><option>초3</option><option>초4</option><option>초5</option><option>초6</option>
+            <option>중1</option><option selected>중2</option><option>중3</option>
+            <option>고1</option><option>고2</option><option>고3</option>
+          </select>
+          <input id="new-name-up" type="text" placeholder="학생 이름" style="flex:1;height:32px;padding:0 10px;border:1px solid var(--gray-border);border-radius:var(--radius);font-family:inherit;font-size:13px">
+          <button class="btn btn-sm btn-primary" onclick="addStudent('up')">추가</button>
+        </div>
+      </div>
+
+      <!-- 시험 정보 -->
+      <div class="card">
+        <div class="card-title"><span class="icon" style="background:#fef3c7">📋</span>시험 정보</div>
+        <div class="form-row">
+          <div class="form-group" style="flex:1">
+            <label>시험명</label>
+            <input id="up-exam" type="text" placeholder="예) 3월 단원평가">
+          </div>
+          <div class="form-group">
+            <label>단원</label>
+            <select id="up-unit">
+              <option>수와 연산</option><option>방정식</option><option>함수</option>
+              <option>도형</option><option>통계</option><option>확률</option><option>기타</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- 업로드 -->
+      <div class="card">
+        <div class="card-title"><span class="icon" style="background:#dcfce7">📸</span>시험지 사진 업로드</div>
+        <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()"
+          ondragover="event.preventDefault();this.classList.add('drag')"
+          ondragleave="this.classList.remove('drag')"
+          ondrop="handleDrop(event)">
+          <div class="upload-icon">🖼️</div>
+          <h3>사진을 여기에 드래그하거나 클릭하여 업로드</h3>
+          <p>JPG, PNG 형식 지원 · 여러 장도 가능</p>
+        </div>
+        <input type="file" id="file-input" accept="image/*" multiple style="display:none" onchange="handleFileSelect(event)">
+        <div id="preview-area" style="margin-top:12px"></div>
+      </div>
+    </div>
+
+    <div>
+      <!-- AI 분석 결과 -->
+      <div class="card" style="min-height:200px">
+        <div class="card-title"><span class="icon" style="background:#ede9fe">🤖</span>AI 오답 분석 결과</div>
+        <div id="ai-result-area">
+          <div class="alert alert-info">
+            시험지 사진을 업로드하고 <b>AI 분석 시작</b> 버튼을 누르세요.<br>
+            AI가 틀린 문제를 분석하고 유사 문제도 자동 생성합니다.
+          </div>
+        </div>
+        <div style="margin-top:12px;text-align:right" id="analyze-btn-area" style="display:none">
+          <button class="btn btn-primary" id="analyze-btn" onclick="runAnalysis()" disabled>
+            🤖 AI 분석 시작
+          </button>
+        </div>
+      </div>
+
+      <!-- 추가 메모 -->
+      <div class="card" id="memo-card" style="display:none">
+        <div class="card-title"><span class="icon" style="background:#fef3c7">✏️</span>추가 메모 (선택)</div>
+        <div class="form-group">
+          <label>선생님 코멘트</label>
+          <textarea id="up-memo" rows="3" placeholder="학생에게 전달할 추가 설명이나 힌트를 입력하세요"></textarea>
+        </div>
+        <div style="text-align:right;margin-top:8px">
+          <button class="btn btn-green" onclick="saveAnalyzedEntries()">✅ 오답노트에 저장</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TAB 2: 직접 입력 ===== -->
+<div id="tab-manual" class="page">
+  <div class="card">
+    <div class="card-title"><span class="icon" style="background:#dbeafe">👤</span>학생 선택</div>
+    <div class="student-chips" id="student-chips-manual"></div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <select id="new-grade-m" style="height:32px;padding:0 6px;border:1px solid var(--gray-border);border-radius:var(--radius);font-family:inherit;font-size:13px;width:70px">
+        <option>초1</option><option>초2</option><option>초3</option><option>초4</option><option>초5</option><option>초6</option>
+        <option>중1</option><option selected>중2</option><option>중3</option>
+        <option>고1</option><option>고2</option><option>고3</option>
+      </select>
+      <input id="new-name-m" type="text" placeholder="학생 이름" style="flex:1;height:32px;padding:0 10px;border:1px solid var(--gray-border);border-radius:var(--radius);font-family:inherit;font-size:13px">
+      <button class="btn btn-sm btn-primary" onclick="addStudent('m')">추가</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon" style="background:#fef3c7">✏️</span>오답 정보 입력</div>
+    <div class="form-row">
+      <div class="form-group" style="width:160px"><label>시험명</label><input id="m-exam" type="text" placeholder="3월 단원평가"></div>
+      <div class="form-group"><label>단원</label>
+        <select id="m-unit"><option>수와 연산</option><option>방정식</option><option>함수</option><option>도형</option><option>통계</option><option>확률</option><option>기타</option></select>
+      </div>
+      <div class="form-group"><label>유형</label>
+        <select id="m-type"><option>계산 실수</option><option>개념 미숙</option><option>문제 이해</option><option>풀이 오류</option><option>시간 부족</option></select>
+      </div>
+      <div class="form-group" style="width:80px"><label>문제번호</label><input id="m-num" type="text" placeholder="5번"></div>
+      <div class="form-group"><label>난이도</label>
+        <select id="m-diff"><option>하</option><option selected>중</option><option>상</option></select>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <label style="margin:0;font-size:11px;font-weight:600;color:var(--text-sub);text-transform:uppercase;letter-spacing:.04em">문제 내용</label>
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-sm" id="m-mode-text" onclick="setProblemMode('text')" style="background:var(--primary);color:#fff;border-color:var(--primary)">✏️ 텍스트</button>
+          <button class="btn btn-sm" id="m-mode-img" onclick="setProblemMode('img')">📷 사진</button>
+        </div>
+      </div>
+      <div id="m-problem-text-area">
+        <textarea id="m-problem" rows="3" placeholder="틀린 문제의 내용을 입력하세요 (유사문제 생성에 활용됩니다)" style="width:100%;padding:8px 10px;border:1px solid var(--gray-border);border-radius:var(--radius);font-family:inherit;font-size:13px;resize:vertical"></textarea>
+      </div>
+      <div id="m-problem-img-area" style="display:none">
+        <div class="upload-zone" id="m-img-zone" style="padding:20px 16px"
+          onclick="document.getElementById('m-img-input').click()"
+          ondragover="event.preventDefault();this.classList.add('drag')"
+          ondragleave="this.classList.remove('drag')"
+          ondrop="handleProblemImgDrop(event)">
+          <div class="upload-icon" style="font-size:24px;margin-bottom:6px">📷</div>
+          <h3 style="font-size:13px">문제 사진을 드래그하거나 클릭하여 업로드</h3>
+          <p>JPG, PNG 지원 · AI가 문제를 자동으로 읽어드려요</p>
+        </div>
+        <input type="file" id="m-img-input" accept="image/*" style="display:none" onchange="handleProblemImgSelect(event)">
+        <div id="m-img-preview" style="margin-top:10px"></div>
+        <div id="m-img-ocr-result" style="margin-top:8px"></div>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:12px">
+      <label>오답 원인 / 메모</label>
+      <textarea id="m-memo" rows="2" placeholder="왜 틀렸는지, 어떤 개념이 부족한지 입력하세요"></textarea>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn" onclick="generateSimilar()">🔁 유사문제 생성</button>
+      <button class="btn btn-primary" onclick="saveManualEntry()">✅ 저장</button>
+    </div>
+    <div id="m-similar-area" style="margin-top:12px"></div>
+  </div>
+</div>
+
+<!-- ===== TAB 3: 엑셀 업로드 ===== -->
+<div id="tab-excel" class="page">
+  <div class="card">
+    <div class="card-title"><span class="icon" style="background:#dcfce7">📊</span>엑셀 / CSV 파일로 학생 명단 불러오기</div>
+    <div class="alert alert-info" style="margin-bottom:16px">
+      <div>
+        <b>사용 방법:</b> 아래 양식에 맞춰 엑셀(xlsx) 또는 CSV 파일을 만든 후 업로드하세요.<br>
+        학생 명단만 있어도 되고, 오답 데이터가 있으면 함께 불러옵니다.
+      </div>
+    </div>
+
+    <!-- 양식 안내 -->
+    <div style="margin-bottom:20px">
+      <div style="font-size:13px;font-weight:600;margin-bottom:8px">📋 파일 양식 (열 순서 고정)</div>
+      <div style="overflow-x:auto">
+        <table class="tbl" style="min-width:600px">
+          <thead><tr>
+            <th>A열: 학생이름 *</th><th>B열: 시험명 *</th><th>C열: 단원 *</th>
+            <th>D열: 문제번호 *</th><th>E열: 유형</th><th>F열: 난이도</th><th>G열: 문제내용</th><th>H열: 메모</th>
+          </tr></thead>
+          <tbody>
+            <tr>
+              <td>김민준</td><td>3월 단원평가</td><td>방정식</td>
+              <td>5번</td><td>계산 실수</td><td>중</td><td>이차방정식 풀기</td><td>부호 실수</td>
+            </tr>
+            <tr style="color:var(--text-sub)">
+              <td>이서연</td><td>3월 단원평가</td><td>함수</td>
+              <td>8번</td><td>개념 미숙</td><td>상</td><td>합성함수</td><td></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="margin-top:8px;font-size:12px;color:var(--text-sub)">
+        * 표시된 열은 필수 · 1행은 헤더(제목행)로 자동 건너뜀 · 유형 미입력 시 "미분류", 난이도 미입력 시 "중"으로 처리
+      </div>
+    </div>
+
+    <!-- 샘플 다운로드 -->
+    <div style="margin-bottom:20px;display:flex;gap:8px">
+      <button class="btn" onclick="downloadSampleCSV()">⬇️ 샘플 CSV 다운로드</button>
+    </div>
+
+    <!-- 업로드 -->
+    <div class="upload-zone" onclick="document.getElementById('excel-input').click()"
+      ondragover="event.preventDefault();this.classList.add('drag')"
+      ondragleave="this.classList.remove('drag')"
+      ondrop="handleExcelDrop(event)">
+      <div class="upload-icon">📂</div>
+      <h3>엑셀(.xlsx) 또는 CSV 파일을 여기에 드래그하거나 클릭</h3>
+      <p>학생 명단만 있어도 됩니다 · 최대 1000행</p>
+    </div>
+    <input type="file" id="excel-input" accept=".csv,.xlsx,.xls" style="display:none" onchange="handleExcelSelect(event)">
+
+    <div id="excel-result" style="margin-top:16px"></div>
+  </div>
+
+  <!-- 학생 명단만 추가 -->
+  <div class="card">
+    <div class="card-title"><span class="icon" style="background:#dbeafe">👥</span>학생 이름만 빠르게 추가</div>
+    <div style="font-size:12px;color:var(--text-sub);margin-bottom:10px">쉼표 또는 줄바꿈으로 구분해서 여러 명을 한번에 추가하세요</div>
+    <textarea id="bulk-names" rows="4" style="width:100%;padding:10px;border:1px solid var(--gray-border);border-radius:var(--radius);font-family:inherit;font-size:13px;resize:vertical" placeholder="예)&#10;김민준, 이서연, 박지호&#10;또는&#10;김민준&#10;이서연&#10;박지호"></textarea>
+    <div style="text-align:right;margin-top:8px">
+      <button class="btn btn-primary" onclick="addBulkStudents()">👥 일괄 추가</button>
+    </div>
+    <div id="bulk-result" style="margin-top:8px"></div>
+  </div>
+
+  <!-- 현재 학생 목록 -->
+  <div class="card">
+    <div class="card-title"><span class="icon" style="background:#fef3c7">📋</span>현재 등록된 학생 <span id="student-count-badge" style="font-size:12px;font-weight:400;color:var(--text-sub);margin-left:4px"></span></div>
+    <div id="current-student-list" style="min-height:40px"></div>
+    <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--gray-border);display:flex;gap:8px">
+      <button class="btn btn-red btn-sm" onclick="clearAllStudents()">🗑️ 전체 초기화</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TAB 4: 학생별 관리 ===== -->
+<div id="tab-students" class="page">
+  <div class="grid2">
+    <!-- 왼쪽: 학생 목록 -->
+    <div>
+      <div class="card">
+        <div class="card-title"><span class="icon" style="background:#dbeafe">👥</span>학생 목록 <span id="students-total-badge" style="font-size:12px;font-weight:400;color:var(--text-sub)"></span></div>
+        <div id="students-sidebar"></div>
+      </div>
+    </div>
+    <!-- 오른쪽: 선택된 학생 상세 -->
+    <div>
+      <div class="card" id="student-detail-card">
+        <div style="text-align:center;padding:40px 0;color:var(--text-sub);font-size:13px">
+          👈 왼쪽에서 학생을 선택하세요
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TAB 3: 교재 보관함 ===== -->
+<div id="tab-books" class="page">
+
+  <div class="grid2">
+    <!-- 왼쪽: 교재 등록 + 목록 -->
+    <div>
+      <!-- 교재 등록 -->
+      <div class="card">
+        <div class="card-title"><span class="icon" style="background:#dcfce7">➕</span>교재 등록</div>
+        <div class="form-group" style="margin-bottom:10px">
+          <label>교재명</label>
+          <input id="book-title" type="text" placeholder="예) 수학의 정석 중2, RPM 중3" style="width:100%">
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="flex:1">
+            <label>출판사</label>
+            <input id="book-publisher" type="text" placeholder="예) 성문출판사" style="width:100%">
+          </div>
+          <div class="form-group" style="flex:1">
+            <label>대상 학년</label>
+            <select id="book-grade" style="width:100%">
+              <option>초1</option><option>초2</option><option>초3</option>
+              <option>초4</option><option>초5</option><option>초6</option>
+              <option>중1</option><option>중2</option><option>중3</option>
+              <option>고1</option><option>고2</option><option>고3</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:12px">
+          <label>단원 범위 (선택)</label>
+          <input id="book-range" type="text" placeholder="예) 1~5단원, 수와 연산 전범위">
+        </div>
+
+        <!-- PDF 업로드 -->
+        <div style="margin-bottom:12px">
+          <div style="font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">PDF 파일 업로드</div>
+          <div class="upload-zone" id="book-upload-zone" style="padding:20px" onclick="document.getElementById('book-pdf-input').click()"
+            ondragover="event.preventDefault();this.classList.add('drag')"
+            ondragleave="this.classList.remove('drag')"
+            ondrop="handleBookPdfDrop(event)">
+            <div style="font-size:28px;margin-bottom:8px">📕</div>
+            <h3 style="font-size:13px">PDF 파일을 드래그하거나 클릭하여 업로드</h3>
+            <p>교재 PDF · 파일은 브라우저에 저장됩니다</p>
+          </div>
+          <input type="file" id="book-pdf-input" accept=".pdf" style="display:none" onchange="handleBookPdfSelect(event)">
+          <div id="book-pdf-status" style="margin-top:8px"></div>
+        </div>
+
+        <div style="text-align:right">
+          <button class="btn btn-primary" onclick="saveBook()">📚 교재 저장</button>
+        </div>
+      </div>
+
+      <!-- 등록된 교재 목록 -->
+      <div class="card">
+        <div class="card-title"><span class="icon" style="background:#dbeafe">📚</span>등록된 교재 <span id="book-count-badge" style="font-size:12px;font-weight:400;color:var(--text-sub)"></span></div>
+        <div id="book-list"></div>
+      </div>
+    </div>
+
+    <!-- 오른쪽: 선택된 교재 오답 지정 -->
+    <div>
+      <div class="card" id="book-detail-card">
+        <div style="text-align:center;padding:40px 0;color:var(--text-sub);font-size:13px">
+          👈 교재를 선택하면<br>쪽수·문제번호로 오답을 지정할 수 있어요
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PDF 뷰어 모달 -->
+  <div id="book-viewer-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;display:none;flex-direction:column">
+    <div style="background:#1e40af;color:#fff;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span id="viewer-title" style="font-size:14px;font-weight:600"></span>
+        <span style="font-size:12px;opacity:.8">|</span>
+        <button onclick="changePage(-1)" style="background:rgba(255,255,255,.2);border:none;color:#fff;padding:4px 10px;border-radius:4px;cursor:pointer">◀</button>
+        <span style="font-size:13px"><span id="viewer-page-cur">1</span> / <span id="viewer-page-total">?</span> 쪽</span>
+        <button onclick="changePage(1)" style="background:rgba(255,255,255,.2);border:none;color:#fff;padding:4px 10px;border-radius:4px;cursor:pointer">▶</button>
+        <input id="viewer-goto" type="number" min="1" placeholder="쪽" style="width:60px;height:28px;padding:0 8px;border:none;border-radius:4px;font-size:13px" onkeydown="if(event.key==='Enter')gotoPage()">
+        <button onclick="gotoPage()" style="background:rgba(255,255,255,.2);border:none;color:#fff;padding:4px 10px;border-radius:4px;cursor:pointer">이동</button>
+      </div>
+      <button onclick="closeViewer()" style="background:none;border:none;color:#fff;font-size:22px;cursor:pointer">×</button>
+    </div>
+    <div style="flex:1;overflow:auto;display:flex;justify-content:center;align-items:flex-start;padding:16px;background:#525659">
+      <canvas id="pdf-canvas" style="max-width:100%;box-shadow:0 4px 20px rgba(0,0,0,.4)"></canvas>
+    </div>
+    <!-- 이 페이지에서 오답 지정 -->
+    <div style="background:#fff;border-top:1px solid var(--gray-border);padding:12px 20px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;flex-shrink:0">
+      <span style="font-size:13px;font-weight:600;color:var(--primary)">이 페이지 오답 지정:</span>
+      <select id="viewer-student" style="height:32px;padding:0 8px;border:1px solid var(--gray-border);border-radius:var(--radius);font-size:13px;font-family:inherit">
+        <option value="">학생 선택</option>
+      </select>
+      <input id="viewer-num" type="text" placeholder="문제번호 (예: 8번)" style="width:110px;height:32px;padding:0 10px;border:1px solid var(--gray-border);border-radius:var(--radius);font-size:13px">
+      <select id="viewer-type" style="height:32px;padding:0 8px;border:1px solid var(--gray-border);border-radius:var(--radius);font-size:13px;font-family:inherit">
+        <option>계산 실수</option><option>개념 미숙</option><option>문제 이해</option><option>풀이 오류</option><option>시간 부족</option>
+      </select>
+      <select id="viewer-diff" style="height:32px;padding:0 8px;border:1px solid var(--gray-border);border-radius:var(--radius);font-size:13px;font-family:inherit">
+        <option>하</option><option selected>중</option><option>상</option>
+      </select>
+      <input id="viewer-memo" type="text" placeholder="오답 원인 메모" style="flex:1;min-width:120px;height:32px;padding:0 10px;border:1px solid var(--gray-border);border-radius:var(--radius);font-size:13px">
+      <button class="btn btn-primary" style="height:32px" onclick="addWrongFromViewer()">➕ 오답 추가</button>
+      <span id="viewer-added-msg" style="font-size:12px;color:var(--green);opacity:0;transition:opacity .4s"></span>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== TAB 4: 시험지 보관함 ===== -->
+<div id="tab-library" class="page">
+
+  <!-- 등록 카드 -->
+  <div class="card">
+    <div class="card-title"><span class="icon" style="background:#dcfce7">➕</span>시험지 등록</div>
+    <div class="form-row">
+      <div class="form-group" style="flex:1"><label>시험명</label><input id="lib-exam" type="text" placeholder="예) 4월 단원평가" style="width:100%"></div>
+      <div class="form-group"><label>대상 학년/반</label><input id="lib-class" type="text" placeholder="예) 중2-1반" style="width:110px"></div>
+      <div class="form-group"><label>시험 날짜</label><input id="lib-date" type="date" style="width:140px"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group" style="flex:1"><label>단원</label>
+        <select id="lib-unit" style="width:100%">
+          <option>수와 연산</option><option>방정식</option><option>함수</option>
+          <option>도형</option><option>통계</option><option>확률</option><option>기타</option>
+        </select>
+      </div>
+      <div class="form-group" style="flex:2"><label>메모 (총 문항 수, 범위 등)</label>
+        <input id="lib-memo" type="text" placeholder="예) 총 20문항, 2단원 전범위" style="width:100%">
+      </div>
+    </div>
+
+    <!-- 시험지 이미지 업로드 -->
+    <div style="margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">시험지 이미지 (여러 장 가능)</div>
+      <div class="upload-zone" id="lib-upload-zone" style="padding:20px" onclick="document.getElementById('lib-img-input').click()"
+        ondragover="event.preventDefault();this.classList.add('drag')"
+        ondragleave="this.classList.remove('drag')"
+        ondrop="handleLibDrop(event)">
+        <div style="font-size:28px;margin-bottom:8px">📄</div>
+        <h3 style="font-size:13px">시험지 사진 또는 이미지를 업로드</h3>
+        <p>JPG, PNG · 여러 장 동시 업로드 가능 · 페이지별로 한 장씩</p>
+      </div>
+      <input type="file" id="lib-img-input" accept="image/*" multiple style="display:none" onchange="handleLibImgSelect(event)">
+      <div id="lib-img-previews" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px"></div>
+    </div>
+
+    <div style="text-align:right">
+      <button class="btn btn-primary" onclick="saveExamToLibrary()">📚 보관함에 저장</button>
+    </div>
+  </div>
+
+  <!-- 보관함 목록 -->
+  <div class="card">
+    <div class="card-title"><span class="icon" style="background:#dbeafe">🗂️</span>저장된 시험지 <span id="lib-count-badge" style="font-size:12px;font-weight:400;color:var(--text-sub)"></span></div>
+    <div id="lib-list"></div>
+  </div>
+
+  <!-- 시험지 상세 모달 -->
+  <div id="lib-detail-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;overflow-y:auto;padding:24px">
+    <div style="background:#fff;border-radius:var(--radius-lg);max-width:800px;margin:0 auto;overflow:hidden">
+      <div style="background:var(--primary);color:#fff;padding:16px 20px;display:flex;justify-content:space-between;align-items:center">
+        <h3 id="lib-modal-title" style="font-size:15px;font-weight:700"></h3>
+        <button onclick="closeLibModal()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer">×</button>
+      </div>
+      <div id="lib-modal-body" style="padding:20px"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== TAB 5: 오답 목록 ===== -->
+<div id="tab-manage" class="page">
+  <div class="stat-bar" id="stat-bar"></div>
+
+  <div class="card" style="padding:12px 20px">
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <select id="filter-grade" onchange="renderList()" style="height:32px;padding:0 8px;border:1px solid var(--gray-border);border-radius:var(--radius);font-size:13px;font-family:inherit">
+        <option value="">전체 학년</option>
+      </select>
+      <select id="filter-student" onchange="renderList()" style="height:32px;padding:0 8px;border:1px solid var(--gray-border);border-radius:var(--radius);font-size:13px;font-family:inherit">
+        <option value="">전체 학생</option>
+      </select>
+      <select id="filter-unit" onchange="renderList()" style="height:32px;padding:0 8px;border:1px solid var(--gray-border);border-radius:var(--radius);font-size:13px;font-family:inherit">
+        <option value="">전체 단원</option>
+        <option>수와 연산</option><option>방정식</option><option>함수</option><option>도형</option><option>통계</option><option>확률</option>
+      </select>
+      <select id="filter-diff" onchange="renderList()" style="height:32px;padding:0 8px;border:1px solid var(--gray-border);border-radius:var(--radius);font-size:13px;font-family:inherit">
+        <option value="">전체 난이도</option><option>하</option><option>중</option><option>상</option>
+      </select>
+      <span style="font-size:12px;color:var(--text-sub)" id="list-count"></span>
+    </div>
+  </div>
+
+  <div id="entry-list"></div>
+</div>
+
+<!-- ===== TAB 4: PDF 생성 ===== -->
+<div id="tab-pdf" class="page">
+  <div class="card">
+    <div class="card-title"><span class="icon" style="background:#dbeafe">⚙️</span>PDF 출력 설정</div>
+    <div class="form-row">
+      <div class="form-group" style="flex:1">
+        <label>학생 선택</label>
+        <select id="pdf-student" onchange="renderPdfPreview()">
+          <option value="">학생 선택...</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>포함 단원</label>
+        <select id="pdf-unit" onchange="renderPdfPreview()">
+          <option value="">전체</option>
+          <option>수와 연산</option><option>방정식</option><option>함수</option><option>도형</option><option>통계</option><option>확률</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>유사문제 포함</label>
+        <select id="pdf-similar" onchange="renderPdfPreview()">
+          <option value="yes">포함</option>
+          <option value="no">제외</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="printPdf()" style="align-self:flex-end">🖨️ 인쇄 / PDF 저장</button>
+    </div>
+  </div>
+
+  <div id="pdf-preview"></div>
+</div>
+
+</div><!-- /main -->
+
+<script>
+// ====== GOOGLE DRIVE 연동 ======
+const DRIVE_CLIENT_ID_KEY = 'odap_drive_client_id';
+const DRIVE_FOLDER_NAME   = 'AI오답노트_데이터';
+let gisClient = null;
+let driveAccessToken = null;
+let driveFolderId = null;
+
+function getDriveClientId() { return localStorage.getItem(DRIVE_CLIENT_ID_KEY) || '383386185557-ucml5fihn78futeeimtn69pe0ofgm4lt.apps.googleusercontent.com'; }
+function saveDriveClientId() {
+  const val = document.getElementById('drive-client-id-input').value.trim();
+  if(!val || !val.includes('.apps.googleusercontent.com')) {
+    alert('올바른 클라이언트 ID 형식이 아닙니다.\n(예: 123456789-abc....apps.googleusercontent.com)'); return;
+  }
+  localStorage.setItem(DRIVE_CLIENT_ID_KEY, val);
+  document.getElementById('drive-setup-modal').style.display = 'none';
+  loadGoogleGIS(val);
+}
+
+function driveLogin() {
+  const clientId = getDriveClientId();
+  if(!clientId) {
+    // 클라이언트 ID 없으면 설정 모달 열기
+    document.getElementById('drive-setup-modal').style.display = 'flex';
+    document.getElementById('drive-client-id-input').value = clientId;
+    return;
+  }
+  loadGoogleGIS(clientId);
+}
+
+function loadGoogleGIS(clientId) {
+  if(window.google?.accounts?.oauth2) { startGISFlow(clientId); return; }
+  const s = document.createElement('script');
+  s.src = 'https://accounts.google.com/gsi/client';
+  s.onload = () => startGISFlow(clientId);
+  s.onerror = () => alert('Google 로그인 스크립트 로드 실패. 인터넷 연결을 확인하세요.');
+  document.head.appendChild(s);
+}
+
+function startGISFlow(clientId) {
+  gisClient = google.accounts.oauth2.initTokenClient({
+    client_id: clientId,
+    scope: 'https://www.googleapis.com/auth/drive.file',
+    callback: async (resp) => {
+      if(resp.error) { alert('Google 로그인 실패: ' + resp.error); return; }
+      driveAccessToken = resp.access_token;
+      await fetchDriveUserInfo();
+      await ensureDriveFolder();
+      await driveLoadAll();
+      updateDriveUI(true);
+      showDriveBadge('✅ Google Drive 연결됨');
+    }
+  });
+  gisClient.requestAccessToken();
+}
+
+async function fetchDriveUserInfo() {
+  try {
+    const r = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: 'Bearer ' + driveAccessToken }
+    });
+    const info = await r.json();
+    document.getElementById('drive-user-name').textContent = info.name || info.email || '';
+    if(info.picture) document.getElementById('drive-avatar').src = info.picture;
+  } catch(e) {}
+}
+
+function updateDriveUI(loggedIn) {
+  document.getElementById('drive-login-btn').style.display   = loggedIn ? 'none' : '';
+  document.getElementById('drive-user-info').style.display   = loggedIn ? 'flex' : 'none';
+  document.getElementById('drive-sync-btn').style.display    = loggedIn ? '' : 'none';
+  document.getElementById('drive-logout-btn').style.display  = loggedIn ? '' : 'none';
+}
+
+function driveLogout() {
+  driveAccessToken = null; driveFolderId = null; gisClient = null;
+  updateDriveUI(false);
+  showDriveBadge('Drive 연결 해제됨');
+}
+
+function showDriveBadge(msg) {
+  const el = document.getElementById('save-badge');
+  if(!el) return;
+  el.textContent = msg; el.style.opacity = '1';
+  clearTimeout(el._t); el._t = setTimeout(() => { el.style.opacity = '0'; }, 3000);
+}
+
+// ====== Drive 폴더 생성/탐색 ======
+async function ensureDriveFolder() {
+  // 기존 폴더 검색
+  const q = `name='${DRIVE_FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false`;
+  const r = await driveApi(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name)`);
+  if(r.files?.length) { driveFolderId = r.files[0].id; return; }
+  // 없으면 생성
+  const cr = await driveApi('https://www.googleapis.com/drive/v3/files', 'POST', {
+    name: DRIVE_FOLDER_NAME,
+    mimeType: 'application/vnd.google-apps.folder'
+  });
+  driveFolderId = cr.id;
+}
+
+// ====== Drive API 헬퍼 ======
+async function driveApi(url, method='GET', body=null) {
+  const opts = {
+    method,
+    headers: { Authorization: 'Bearer ' + driveAccessToken }
+  };
+  if(body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+  const r = await fetch(url, opts);
+  if(!r.ok) {
+    const err = await r.json().catch(()=>({}));
+    throw new Error(err.error?.message || `Drive API 오류 ${r.status}`);
+  }
+  return r.json().catch(()=>({}));
+}
+
+// multipart 업로드 (파일 내용 포함)
+async function driveUploadFile(name, content, mimeType='application/json', existingId=null) {
+  const meta = JSON.stringify({ name, parents: existingId ? undefined : [driveFolderId] });
+  const boundary = 'odap_boundary_xyz';
+  const body = `--${boundary}\r\nContent-Type: application/json\r\n\r\n${meta}\r\n--${boundary}\r\nContent-Type: ${mimeType}\r\n\r\n${content}\r\n--${boundary}--`;
+  const url = existingId
+    ? `https://www.googleapis.com/upload/drive/v3/files/${existingId}?uploadType=multipart`
+    : `https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart`;
+  const r = await fetch(url, {
+    method: existingId ? 'PATCH' : 'POST',
+    headers: {
+      Authorization: 'Bearer ' + driveAccessToken,
+      'Content-Type': `multipart/related; boundary=${boundary}`
+    },
+    body
+  });
+  return r.json();
+}
+
+async function driveGetFileId(name) {
+  const q = `name='${name}' and '${driveFolderId}' in parents and trashed=false`;
+  const r = await driveApi(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name)`);
+  return r.files?.[0]?.id || null;
+}
+
+async function driveReadFile(fileId) {
+  const r = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+    headers: { Authorization: 'Bearer ' + driveAccessToken }
+  });
+  return r.text();
+}
+
+// ====== 저장/불러오기 ======
+// 오답 데이터 (students, entries, nextId) → main_data.json
+async function driveSaveMainData() {
+  if(!driveAccessToken || !driveFolderId) { saveState(); return; } // fallback
+  try {
+    const content = JSON.stringify({ students: state.students, entries: state.entries, nextId: state.nextId });
+    const existId = await driveGetFileId('main_data.json');
+    await driveUploadFile('main_data.json', content, 'application/json', existId);
+    showDriveBadge('☁️ Drive에 저장됨');
+  } catch(e) { console.error('Drive 저장 실패:', e); saveState(); }
+}
+
+// 시험지 보관함 → library_data.json (이미지는 Base64 포함, 향후 분리 가능)
+async function driveSaveLibrary() {
+  if(!driveAccessToken || !driveFolderId) { saveLibrary(); return; }
+  try {
+    const content = JSON.stringify(state.library);
+    const existId = await driveGetFileId('library_data.json');
+    await driveUploadFile('library_data.json', content, 'application/json', existId);
+    showDriveBadge('☁️ Drive에 저장됨');
+  } catch(e) { console.error('Drive 라이브러리 저장 실패:', e); saveLibrary(); }
+}
+
+// 교재 보관함 → books_data.json (PDF Base64 포함)
+async function driveSaveBooks() {
+  if(!driveAccessToken || !driveFolderId) { saveBooks(); return; }
+  try {
+    const content = JSON.stringify(state.books);
+    const existId = await driveGetFileId('books_data.json');
+    await driveUploadFile('books_data.json', content, 'application/json', existId);
+    showDriveBadge('☁️ Drive에 저장됨');
+  } catch(e) { console.error('Drive 교재 저장 실패:', e); saveBooks(); }
+}
+
+// 전체 불러오기
+async function driveLoadAll() {
+  if(!driveAccessToken || !driveFolderId) return;
+  try {
+    // 메인 데이터
+    const mainId = await driveGetFileId('main_data.json');
+    if(mainId) {
+      const txt = await driveReadFile(mainId);
+      const d = JSON.parse(txt);
+      state.students = d.students || [];
+      state.entries  = d.entries  || [];
+      state.nextId   = d.nextId   || 1;
+    }
+    // 라이브러리
+    const libId = await driveGetFileId('library_data.json');
+    if(libId) {
+      const txt = await driveReadFile(libId);
+      state.library = JSON.parse(txt);
+    }
+    // 교재
+    const bookId = await driveGetFileId('books_data.json');
+    if(bookId) {
+      const txt = await driveReadFile(bookId);
+      state.books = JSON.parse(txt);
+    }
+    // UI 갱신
+    renderChips(); updateSelects(); renderStats(); renderLibrary(); renderBookList();
+    showDriveBadge('☁️ Drive에서 불러옴');
+  } catch(e) { console.error('Drive 불러오기 실패:', e); alert('Drive 데이터 불러오기 실패: ' + e.message); }
+}
+
+// 전체 수동 동기화
+async function driveSyncAll() {
+  if(!driveAccessToken) { alert('먼저 Google Drive에 연결해주세요.'); return; }
+  showDriveBadge('☁️ 동기화 중...');
+  await driveSaveMainData();
+  await driveSaveLibrary();
+  await driveSaveBooks();
+  showDriveBadge('✅ 동기화 완료');
+}
+
+// ====== 기존 saveState / saveLibrary / saveBooks 를 Drive 우선으로 override ======
+const _origSaveState   = () => { try { localStorage.setItem('odap_note_data_v1', JSON.stringify({students:state.students,entries:state.entries,nextId:state.nextId})); } catch(e){} };
+const _origSaveLibrary = () => { try { localStorage.setItem('odap_library_v1', JSON.stringify(state.library)); } catch(e){} };
+const _origSaveBooks   = () => { try { localStorage.setItem('odap_books_v1',   JSON.stringify(state.books));   } catch(e){ alert('교재 저장 실패: 용량 초과'); } };
+
+// ====== API KEY MANAGEMENT ======
+function getApiKey() {
+  return localStorage.getItem('anthropic_api_key') || '';
+}
+function saveApiKey(key) {
+  localStorage.setItem('anthropic_api_key', key.trim());
+}
+function showApiKeyModal() {
+  const cur = getApiKey();
+  document.getElementById('api-key-modal').style.display = 'flex';
+  document.getElementById('api-key-input').value = cur;
+}
+function closeApiKeyModal() {
+  document.getElementById('api-key-modal').style.display = 'none';
+}
+function confirmApiKey() {
+  const val = document.getElementById('api-key-input').value.trim();
+  if(!val.startsWith('sk-ant-')) { alert('올바른 API 키를 입력하세요 (sk-ant-... 형식)'); return; }
+  saveApiKey(val);
+  closeApiKeyModal();
+  alert('✅ API 키가 저장되었습니다.');
+}
+function showApiKeyPrompt(targetId, retryFn) {
+  return `<div class="alert alert-warn">
+    ⚠️ Anthropic API 키가 필요합니다.<br>
+    <button class="btn btn-sm btn-primary" style="margin-top:8px" onclick="showApiKeyModal()">🔑 API 키 입력하기</button>
+  </div>`;
+}
+function apiFetch(body) {
+  const key = getApiKey();
+  if(!key) throw new Error('API 키 없음');
+  return fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': key,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify(body)
+  }).then(async r => {
+    const data = await r.json();
+    if(!r.ok) throw new Error(data.error?.message || `HTTP ${r.status}`);
+    return data;
+  });
+}
+
+// ====== STATE + 자동저장 ======
+const SAVE_KEY = 'odap_note_data_v1';
+const LIB_KEY  = 'odap_library_v1';
+
+function loadState() {
+  try { const r = localStorage.getItem(SAVE_KEY); return r ? JSON.parse(r) : null; } catch(e) { return null; }
+}
+function loadLibrary() {
+  try { const r = localStorage.getItem(LIB_KEY); return r ? JSON.parse(r) : []; } catch(e) { return []; }
+}
+function saveState() {
+  // localStorage 백업
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ students:state.students, entries:state.entries, nextId:state.nextId })); } catch(e) {}
+  showSaveBadge();
+  // Drive 우선 저장 (비동기, 로그인 시)
+  if(driveAccessToken && driveFolderId) driveSaveMainData();
+}
+function loadBooks() {
+  try { const r = localStorage.getItem('odap_books_v1'); return r ? JSON.parse(r) : []; } catch(e) { return []; }
+}
+function saveBooks() {
+  try { localStorage.setItem('odap_books_v1', JSON.stringify(state.books)); showSaveBadge(); } catch(e) { alert('교재 저장 실패: 용량 초과일 수 있습니다. PDF 크기를 줄여보세요.'); }
+  if(driveAccessToken && driveFolderId) driveSaveBooks();
+}
+function showSaveBadge() {
+  const el = document.getElementById('save-badge');
+  if(!el) return;
+  el.textContent = '✅ 저장됨'; el.style.opacity = '1';
+  clearTimeout(el._t); el._t = setTimeout(()=>{ el.style.opacity='0'; }, 2000);
+}
+
+function saveLibrary() {
+  try { localStorage.setItem(LIB_KEY, JSON.stringify(state.library)); showSaveBadge(); } catch(e) { console.warn('라이브러리 저장 실패:', e); }
+  if(driveAccessToken && driveFolderId) driveSaveLibrary();
+}
+
+const _saved = loadState();
+const state = {
+  students: _saved?.students || [],
+  entries:  _saved?.entries  || [],
+  nextId:   _saved?.nextId   || 1,
+  library:  loadLibrary(),
+  books:    loadBooks(),
+  selectedStudent: {up:null, m:null},
+  pendingEntries: [],
+  libImages: [],
+  // PDF 뷰어 상태
+  viewer: { bookId: null, pdfDoc: null, currentPage: 1 }
+};
+
+// ====== NAVIGATION ======
+function switchTab(name, el) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  el.classList.add('active');
+  if(name==='manage')   { renderStats(); renderList(); }
+  if(name==='pdf')      renderPdfPreview();
+  if(name==='excel')    renderCurrentStudentList();
+  if(name==='students') renderStudentsSidebar();
+  if(name==='library')  renderLibrary();
+  if(name==='books')    renderBookList();
+  renderChips();
+}
+
+// ====== 학생별 관리 ======
+let selectedStudentDetail = null;
+
+function renderStudentsSidebar() {
+  const badge = document.getElementById('students-total-badge');
+  if(badge) badge.textContent = `(${state.students.length}명)`;
+
+  const el = document.getElementById('students-sidebar');
+  if(!el) return;
+
+  if(!state.students.length) {
+    el.innerHTML = `<div class="empty" style="padding:20px 0;font-size:13px;color:var(--text-sub)">등록된 학생이 없습니다.<br>엑셀 업로드 탭에서 학생을 추가하세요.</div>`;
+    return;
+  }
+
+  const byStudent = {};
+  state.students.forEach(s => { byStudent[studentName(s)] = state.entries.filter(e=>e.student===studentName(s)); });
+
+  el.innerHTML = state.students.map(s => {
+    const name   = studentName(s);
+    const grade  = studentGrade(s);
+    const gc     = gradeColor(grade);
+    const entries = byStudent[name] || [];
+    const weakUnit = entries.length ? Object.entries(
+      entries.reduce((acc,e)=>{ acc[e.unit]=(acc[e.unit]||0)+1; return acc; }, {})
+    ).sort((a,b)=>b[1]-a[1])[0]?.[0] : null;
+    const isSelected = selectedStudentDetail === name;
+    return `
+      <div onclick="showStudentDetail('${name}')" style="
+        display:flex;align-items:center;justify-content:space-between;
+        padding:12px 14px;border-radius:var(--radius);cursor:pointer;margin-bottom:6px;
+        border:1.5px solid ${isSelected ? 'var(--primary)' : 'var(--gray-border)'};
+        background:${isSelected ? 'var(--primary-light)' : '#fff'};
+        transition:all .15s">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:36px;height:36px;border-radius:50%;background:${isSelected?'var(--primary)':gc.bg};
+            color:${isSelected?'#fff':gc.text};display:flex;align-items:center;justify-content:center;
+            font-size:13px;font-weight:600;flex-shrink:0">${name[0]}</div>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px">
+              ${grade?`<span style="font-size:11px;background:${gc.bg};color:${gc.text};padding:1px 6px;border-radius:3px;font-weight:600">${grade}</span>`:''}
+              ${name}
+            </div>
+            <div style="font-size:11px;color:var(--text-sub);margin-top:1px">
+              ${weakUnit ? `취약: ${weakUnit}` : '오답 없음'}
+            </div>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:18px;font-weight:700;color:${entries.length>0?'var(--red)':'var(--text-sub)'}">${entries.length}</div>
+          <div style="font-size:10px;color:var(--text-sub)">오답</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function showStudentDetail(name) {
+  selectedStudentDetail = name;
+  renderStudentsSidebar();
+
+  const entries = state.entries.filter(e=>e.student===name);
+  const card = document.getElementById('student-detail-card');
+
+  // 통계 계산
+  const byUnit = entries.reduce((acc,e)=>{ acc[e.unit]=(acc[e.unit]||0)+1; return acc; },{});
+  const byType = entries.reduce((acc,e)=>{ acc[e.type]=(acc[e.type]||0)+1; return acc; },{});
+  const byExam = entries.reduce((acc,e)=>{ acc[e.exam]=(acc[e.exam]||0)+1; return acc; },{});
+  const weakUnits = Object.entries(byUnit).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  const typeColors = {'계산 실수':'#dc2626','개념 미숙':'#7c3aed','문제 이해':'#d97706','풀이 오류':'#2563eb','시간 부족':'#16a34a','미분류':'#6b7280'};
+
+  card.innerHTML = `
+    <!-- 학생 헤더 -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:44px;height:44px;border-radius:50%;background:var(--primary);color:#fff;
+          display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700">${name[0]}</div>
+        <div>
+          <div style="font-size:16px;font-weight:700">${name}</div>
+          <div style="font-size:12px;color:var(--text-sub)">총 ${entries.length}개 오답 · ${Object.keys(byExam).length}개 시험</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-sm" onclick="exportStudentExcel('${name}')">⬇️ 엑셀</button>
+        <button class="btn btn-sm btn-primary" onclick="printStudentNote('${name}')">🖨️ 인쇄</button>
+      </div>
+    </div>
+
+    <!-- 취약 단원 -->
+    ${weakUnits.length ? `
+    <div style="margin-bottom:14px">
+      <div style="font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">취약 단원</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${weakUnits.map(([u,c],i)=>`
+          <div style="background:${i===0?'var(--red-light)':'var(--gray-light)'};border-radius:var(--radius);padding:8px 14px;text-align:center">
+            <div style="font-size:13px;font-weight:600;color:${i===0?'var(--red)':'var(--text)'}">${u}</div>
+            <div style="font-size:11px;color:var(--text-sub)">${c}개 오답</div>
+          </div>`).join('')}
+      </div>
+    </div>` : ''}
+
+    <!-- 오류 유형 분포 -->
+    ${Object.keys(byType).length ? `
+    <div style="margin-bottom:14px">
+      <div style="font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">오류 유형</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        ${Object.entries(byType).sort((a,b)=>b[1]-a[1]).map(([t,c])=>`
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:12px;min-width:70px;color:var(--text)">${t}</span>
+            <div style="flex:1;height:8px;background:var(--gray-light);border-radius:4px;overflow:hidden">
+              <div style="width:${Math.round(c/entries.length*100)}%;height:100%;background:${typeColors[t]||'#6b7280'};border-radius:4px"></div>
+            </div>
+            <span style="font-size:12px;font-weight:600;min-width:20px;text-align:right">${c}</span>
+          </div>`).join('')}
+      </div>
+    </div>` : ''}
+
+    <!-- 시험별 오답 수 -->
+    ${Object.keys(byExam).length ? `
+    <div style="margin-bottom:16px">
+      <div style="font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">시험별 오답</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${Object.entries(byExam).map(([exam,c])=>`
+          <span style="background:var(--primary-light);color:var(--primary);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:500">
+            ${exam} <b>${c}개</b>
+          </span>`).join('')}
+      </div>
+    </div>` : ''}
+
+    <!-- 오답 목록 -->
+    <div>
+      <div style="font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">전체 오답 목록</div>
+      ${entries.length ? entries.map((e,i)=>`
+        <div style="border:1px solid var(--gray-border);border-radius:var(--radius);padding:12px;margin-bottom:8px">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap">
+            <span style="font-size:12px;font-weight:600;color:var(--primary)">${e.exam} · ${e.num}</span>
+            <span style="background:#ede9fe;color:#5b21b6;padding:2px 7px;border-radius:4px;font-size:11px">${e.unit}</span>
+            <span style="background:${(typeColors[e.type]||'#6b7280')+'22'};color:${typeColors[e.type]||'#6b7280'};padding:2px 7px;border-radius:4px;font-size:11px">${e.type}</span>
+            <span style="background:${e.diff==='상'?'#fee2e2':e.diff==='하'?'#dcfce7':'#fef3c7'};color:${e.diff==='상'?'#991b1b':e.diff==='하'?'#166534':'#92400e'};padding:2px 7px;border-radius:4px;font-size:11px">${e.diff}</span>
+            <span style="font-size:11px;color:var(--text-sub);margin-left:auto">${e.date}</span>
+          </div>
+          ${e.problem?`<div style="font-size:12px;color:var(--text);margin-bottom:4px">${e.problem}</div>`:''}
+          ${e.memo?`<div style="font-size:12px;color:var(--amber);background:var(--amber-light);padding:6px 10px;border-radius:4px">💡 ${e.memo}</div>`:''}
+        </div>`).join('')
+      : '<div style="text-align:center;padding:20px;color:var(--text-sub);font-size:13px">오답 데이터가 없습니다</div>'}
+    </div>`;
+}
+
+function printStudentNote(name) {
+  const entries = state.entries.filter(e=>e.student===name);
+  const today = new Date().toLocaleDateString('ko-KR');
+  const typeColors = {'계산 실수':'#dc2626','개념 미숙':'#7c3aed','문제 이해':'#d97706','풀이 오류':'#2563eb','시간 부족':'#16a34a'};
+  const w = window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8">
+    <title>${name} 오답노트</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700&display=swap');
+      *{box-sizing:border-box;margin:0;padding:0}
+      body{font-family:'Noto Sans KR',sans-serif;padding:24px;color:#111;max-width:800px;margin:0 auto}
+      .hdr{background:#1e40af;color:#fff;padding:16px 20px;border-radius:8px 8px 0 0}
+      .hdr h2{font-size:18px;font-weight:700} .hdr p{font-size:12px;opacity:.85;margin-top:3px}
+      .sub-hdr{background:#eff6ff;padding:10px 20px;border:1px solid #bfdbfe;border-top:none;margin-bottom:16px;font-size:12px;color:#1e3a8a;border-radius:0 0 8px 8px}
+      .entry{border:1px solid #e5e7eb;border-radius:8px;padding:14px;margin-bottom:12px;page-break-inside:avoid}
+      .entry-head{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+      .tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500}
+      .problem{font-size:13px;line-height:1.7;margin-bottom:6px}
+      .memo{background:#fef3c7;padding:8px 12px;border-radius:4px;font-size:12px;color:#92400e;margin-bottom:8px}
+      .similar{background:#f0fdf4;border:1px solid #86efac;padding:10px;border-radius:6px;font-size:12px;line-height:1.7}
+      .answer{border:1.5px dashed #d1d5db;border-radius:6px;padding:10px;min-height:70px;margin-top:8px;font-size:12px;color:#9ca3af}
+      .footer{margin-top:20px;padding-top:12px;border-top:1px solid #e5e7eb;font-size:11px;color:#9ca3af;text-align:center}
+      @media print{@page{margin:15mm;size:A4}button{display:none!important}}
+    </style></head><body>
+    <div class="hdr"><h2>📝 ${name} 오답노트</h2><p>출력일: ${today}</p></div>
+    <div class="sub-hdr">총 ${entries.length}개 오답</div>
+    ${entries.map((e,i)=>`
+      <div class="entry">
+        <div class="entry-head">
+          <b style="font-size:13px;color:#1e40af">${e.exam} · ${e.num}</b>
+          <span class="tag" style="background:#ede9fe;color:#5b21b6">${e.unit}</span>
+          <span class="tag" style="background:${(typeColors[e.type]||'#6b7280')+'22'};color:${typeColors[e.type]||'#6b7280'}">${e.type}</span>
+          <span class="tag" style="background:#fef3c7;color:#92400e">${e.diff}</span>
+        </div>
+        ${e.problem?`<div class="problem">${e.problem}</div>`:''}
+        ${e.memo?`<div class="memo">💡 ${e.memo}</div>`:''}
+        ${e.similar?`<div class="similar"><b style="color:#15803d">🔁 유사문제</b><br>${e.similar}<div class="answer">내 풀이:</div></div>`:''}
+      </div>`).join('')}
+    <div class="footer">AI 수학 오답노트 · ${today}</div>
+    <br><button onclick="window.print()" style="padding:10px 24px;background:#1e40af;color:#fff;border:none;border-radius:6px;font-size:14px;cursor:pointer;font-family:inherit">🖨️ 인쇄 / PDF 저장</button>
+  </body></html>`);
+  w.document.close();
+}
+
+// ====== STUDENTS ======
+function addStudent(ctx) {
+  const nameId  = ctx==='up' ? 'new-name-up'  : 'new-name-m';
+  const gradeId = ctx==='up' ? 'new-grade-up' : 'new-grade-m';
+  const name  = document.getElementById(nameId).value.trim();
+  const grade = document.getElementById(gradeId)?.value || '';
+  if(!name) return;
+  // 중복 체크 (이름 기준)
+  if(state.students.find(s => (s.name||s) === name)) return;
+  state.students.push({name, grade});
+  document.getElementById(nameId).value = '';
+  saveState();
+  renderChips();
+  updateSelects();
+}
+
+function selectStudent(ctx, name) {
+  state.selectedStudent[ctx] = name;
+  renderChips();
+  checkAnalyzeBtn();
+}
+
+// 학생 표시명: "중2 김민준" 형태
+function studentLabel(s) {
+  if(typeof s === 'string') return s;
+  return s.grade ? `${s.grade} ${s.name}` : s.name;
+}
+function studentName(s) { return typeof s === 'string' ? s : s.name; }
+function studentGrade(s) { return typeof s === 'string' ? '' : (s.grade||''); }
+
+// 학년별 색상
+function gradeColor(grade) {
+  if(!grade) return {bg:'#e0e7ff',text:'#3730a3'};
+  if(grade.startsWith('초')) return {bg:'#dcfce7',text:'#166534'};
+  if(grade.startsWith('중')) return {bg:'#dbeafe',text:'#1e40af'};
+  if(grade.startsWith('고')) return {bg:'#fef3c7',text:'#92400e'};
+  return {bg:'#e0e7ff',text:'#3730a3'};
+}
+
+function renderChips() {
+  ['up','m'].forEach(ctx => {
+    const el = document.getElementById('student-chips-'+ctx);
+    if(!el) return;
+    el.innerHTML = state.students.map(s => {
+      const name  = studentName(s);
+      const label = studentLabel(s);
+      const grade = studentGrade(s);
+      const gc    = gradeColor(grade);
+      const isSelected = state.selectedStudent[ctx] === name;
+      return `<div class="chip ${isSelected?'active':''}" onclick="selectStudent('${ctx}','${name}')"
+        style="${grade&&!isSelected ? `background:${gc.bg};color:${gc.text};border-color:${gc.bg}` : ''}">
+        ${label}
+      </div>`;
+    }).join('');
+  });
+}
+
+function updateSelects() {
+  ['filter-student','pdf-student'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    const cur = el.value;
+    el.innerHTML = (id==='filter-student'?'<option value="">전체 학생</option>':'<option value="">학생 선택...</option>') +
+      state.students.map(s=>{
+        const name = studentName(s);
+        const label = studentLabel(s);
+        return `<option value="${name}" ${name===cur?'selected':''}>${label}</option>`;
+      }).join('');
+  });
+  // 학년 필터 추가 (오답목록 탭)
+  const gf = document.getElementById('filter-grade');
+  if(gf) {
+    const cur = gf.value;
+    const grades = [...new Set(state.students.map(s=>studentGrade(s)).filter(Boolean))];
+    gf.innerHTML = '<option value="">전체 학년</option>' + grades.map(g=>`<option ${g===cur?'selected':''}>${g}</option>`).join('');
+  }
+}
+
+// ====== UPLOAD & ANALYSIS ======
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.remove('drag');
+  const files = [...e.dataTransfer.files].filter(f=>f.type.startsWith('image/'));
+  if(files.length) processFiles(files);
+}
+function handleFileSelect(e) { processFiles([...e.target.files]); }
+
+function processFiles(files) {
+  const area = document.getElementById('preview-area');
+  area.innerHTML = '';
+  files.forEach(file=>{
+    const reader = new FileReader();
+    reader.onload = ev=>{
+      const img = document.createElement('img');
+      img.src = ev.target.result;
+      img.className = 'preview-img';
+      img.style.marginBottom = '8px';
+      img.dataset.base64 = ev.target.result.split(',')[1];
+      img.dataset.mime = file.type;
+      area.appendChild(img);
+    };
+    reader.readAsDataURL(file);
+  });
+  document.getElementById('analyze-btn-area').style.display = 'block';
+  document.getElementById('analyze-btn').disabled = false;
+  document.getElementById('memo-card').style.display = 'none';
+  document.getElementById('ai-result-area').innerHTML = `<div class="alert alert-success">✅ 사진 ${files.length}장 업로드 완료! AI 분석 시작 버튼을 눌러주세요.</div>`;
+}
+
+function checkAnalyzeBtn() {
+  const btn = document.getElementById('analyze-btn');
+  if(!btn) return;
+  const imgs = document.querySelectorAll('#preview-area img');
+  btn.disabled = !(imgs.length && state.selectedStudent.up);
+}
+
+async function runAnalysis() {
+  const student = state.selectedStudent.up;
+  const exam = document.getElementById('up-exam').value || '미입력 시험';
+  const unit = document.getElementById('up-unit').value;
+  if(!student) { alert('학생을 먼저 선택해주세요'); return; }
+
+  const imgs = [...document.querySelectorAll('#preview-area img')];
+  const resultArea = document.getElementById('ai-result-area');
+  const btn = document.getElementById('analyze-btn');
+  btn.disabled = true;
+  resultArea.innerHTML = `<div class="loading"><div class="spinner"></div><span>AI가 시험지를 분석 중입니다<span class="loading-dots"></span></span></div>`;
+
+  // Build messages with images
+  const imageContent = imgs.map(img=>({
+    type:'image',
+    source:{type:'base64',media_type:img.dataset.mime,data:img.dataset.base64}
+  }));
+
+  const prompt = `당신은 수학 교사를 돕는 AI 오답 분석 전문가입니다.
+이 시험지 이미지를 보고 학생의 오답을 분석해주세요.
+
+학생 이름: ${student}
+시험명: ${exam}
+단원: ${unit}
+
+다음 JSON 형식으로만 응답해주세요 (다른 텍스트 없이):
+{
+  "entries": [
+    {
+      "num": "문제번호 (예: 3번)",
+      "type": "오류유형 (계산 실수/개념 미숙/문제 이해/풀이 오류 중 하나)",
+      "diff": "난이도 (하/중/상)",
+      "problem": "문제 내용 요약 (1-2줄)",
+      "memo": "왜 틀렸는지 분석 (1-2줄)",
+      "similar": "유사문제 (풀이 가능한 수준으로 새로 만들어주세요)"
+    }
+  ],
+  "summary": "전체 오답 경향 요약 (2-3줄)"
+}
+
+만약 이미지에서 시험지를 명확히 볼 수 없다면, 예시 데이터로 대신 응답해주세요.`;
+
+  const apiKey = getApiKey();
+  if(!apiKey) {
+    resultArea.innerHTML = showApiKeyPrompt();
+    btn.disabled = false;
+    return;
+  }
+
+  try {
+    const data = await apiFetch({
+      model:'claude-sonnet-4-20250514',
+      max_tokens:1000,
+      messages:[{role:'user',content:[...imageContent,{type:'text',text:prompt}]}]
+    });
+    const text = data.content.map(c=>c.text||'').join('');
+    const clean = text.replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(clean);
+
+    state.pendingEntries = (parsed.entries||[]).map((e,i)=>({
+      ...e, id: state.nextId+i, student, exam, unit, date: new Date().toISOString().slice(0,10)
+    }));
+
+    resultArea.innerHTML = `
+      <div class="ai-result">
+        <div class="ai-label">🤖 AI 분석 완료 <span class="ai-badge">Claude</span></div>
+        <p style="font-size:13px;line-height:1.7;margin-bottom:12px;color:#1e40af">${parsed.summary||''}</p>
+        ${state.pendingEntries.map(e=>`
+          <div class="entry-card" style="margin-bottom:8px">
+            <div class="entry-header">
+              <span style="font-size:13px;font-weight:600">${e.num}</span>
+              <div class="entry-tags">
+                <span class="tag tag-unit">${e.unit}</span>
+                <span class="tag tag-type">${e.type}</span>
+                <span class="tag tag-diff-${e.diff}">${e.diff}</span>
+              </div>
+            </div>
+            <div style="font-size:12px;color:var(--text-sub)">${e.problem}</div>
+            <div class="entry-memo">💡 ${e.memo}</div>
+            ${e.similar?`<div class="entry-similar"><div class="entry-similar-title">🔁 유사문제</div>${e.similar}</div>`:''}
+          </div>`).join('')}
+      </div>`;
+    document.getElementById('memo-card').style.display = 'block';
+  } catch(err) {
+    resultArea.innerHTML = `<div class="alert alert-warn">⚠️ 분석 중 오류가 발생했습니다. 다시 시도해주세요.<br><small>${err.message}</small></div>`;
+    btn.disabled = false;
+  }
+}
+
+function saveAnalyzedEntries() {
+  if(!state.pendingEntries.length) { alert('저장할 항목이 없습니다'); return; }
+  const memo = document.getElementById('up-memo').value;
+  state.pendingEntries.forEach(e=>{
+    if(memo) e.teacherMemo = memo;
+    state.entries.push(e);
+    state.nextId++;
+  });
+  state.pendingEntries = [];
+  saveState();
+  alert(`✅ ${state.entries.filter(e=>e.student===state.selectedStudent.up).length}개의 오답이 저장되었습니다!`);
+  switchTab('manage', document.querySelectorAll('.nav-tab')[2]);
+  renderStats();
+  renderList();
+}
+
+// ====== PROBLEM IMAGE INPUT ======
+function setProblemMode(mode) {
+  const textArea = document.getElementById('m-problem-text-area');
+  const imgArea = document.getElementById('m-problem-img-area');
+  const btnText = document.getElementById('m-mode-text');
+  const btnImg = document.getElementById('m-mode-img');
+  if(mode === 'text') {
+    textArea.style.display = 'block';
+    imgArea.style.display = 'none';
+    btnText.style.cssText += ';background:var(--primary);color:#fff;border-color:var(--primary)';
+    btnImg.style.cssText = btnImg.style.cssText.replace(/background:[^;]+;color:[^;]+;border-color:[^;]+;/g,'');
+    btnImg.style.background = '';
+    btnImg.style.color = '';
+    btnImg.style.borderColor = '';
+  } else {
+    textArea.style.display = 'none';
+    imgArea.style.display = 'block';
+    btnImg.style.background = 'var(--primary)';
+    btnImg.style.color = '#fff';
+    btnImg.style.borderColor = 'var(--primary)';
+    btnText.style.background = '';
+    btnText.style.color = '';
+    btnText.style.borderColor = '';
+  }
+}
+
+function handleProblemImgDrop(e) {
+  e.preventDefault();
+  document.getElementById('m-img-zone').classList.remove('drag');
+  const file = [...e.dataTransfer.files].find(f=>f.type.startsWith('image/'));
+  if(file) loadProblemImage(file);
+}
+function handleProblemImgSelect(e) {
+  const file = e.target.files[0];
+  if(file) loadProblemImage(file);
+}
+
+function loadProblemImage(file) {
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const base64 = ev.target.result.split(',')[1];
+    const mime = file.type;
+
+    // Show preview
+    document.getElementById('m-img-preview').innerHTML = `
+      <img src="${ev.target.result}" style="max-width:100%;max-height:260px;border-radius:var(--radius);border:1px solid var(--gray-border);object-fit:contain;display:block">
+      <button class="btn btn-sm" style="margin-top:6px" onclick="document.getElementById('m-img-input').click()">🔄 다른 사진으로 변경</button>`;
+
+    // AI OCR
+    const ocrEl = document.getElementById('m-img-ocr-result');
+    ocrEl.innerHTML = '<div class="loading"><div class="spinner"></div><span>AI가 문제를 읽는 중...</span></div>';
+
+    // API 키 입력 확인
+    const apiKey = getApiKey();
+    if(!apiKey) {
+      ocrEl.innerHTML = showApiKeyPrompt('m-img-ocr-result', () => loadProblemImage(file));
+      return;
+    }
+
+    fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: [
+            {type:'image', source:{type:'base64', media_type:mime, data:base64}},
+            {type:'text', text:'이 이미지에서 수학 문제 내용을 정확히 읽어서 텍스트로만 출력해주세요. 수식은 일반 텍스트로 표현하세요 (예: x^2, sqrt(x)). 문제 번호가 있으면 포함하세요. 부가 설명 없이 문제 텍스트만 출력하세요.'}
+          ]
+        }]
+      })
+    })
+    .then(async r => {
+      const data = await r.json();
+      if(!r.ok) throw new Error(data.error?.message || `HTTP ${r.status}`);
+      return data;
+    })
+    .then(data => {
+      const text = data.content.map(c=>c.text||'').join('').trim();
+      document.getElementById('m-img-input').dataset.extractedText = text;
+      ocrEl.innerHTML = `
+        <div class="ai-result" style="margin-top:0">
+          <div class="ai-label" style="margin-bottom:6px">📖 AI가 읽은 문제 내용 <span class="ai-badge">수정 가능</span></div>
+          <textarea id="m-problem-from-img" rows="3" style="width:100%;padding:8px 10px;border:1px solid #93c5fd;border-radius:var(--radius);font-family:inherit;font-size:13px;resize:vertical;background:#fff">${text}</textarea>
+        </div>`;
+    })
+    .catch(err => {
+      const isAuthErr = err.message.includes('401') || err.message.toLowerCase().includes('auth') || err.message.toLowerCase().includes('api key');
+      ocrEl.innerHTML = `
+        <div class="alert alert-warn">
+          ⚠️ 오류: ${err.message}<br>
+          ${isAuthErr ? '<b>API 키를 확인해주세요.</b> 오른쪽 상단 ⚙️ 버튼에서 다시 입력할 수 있습니다.' : '잠시 후 다시 시도하거나 텍스트 모드로 입력해주세요.'}
+        </div>`;
+    });
+  };
+  reader.readAsDataURL(file);
+}
+
+// ====== MANUAL ENTRY ======
+function getProblemText() {
+  const imgArea = document.getElementById('m-problem-img-area');
+  if(imgArea.style.display !== 'none') {
+    const ta = document.getElementById('m-problem-from-img');
+    return ta ? ta.value : '';
+  }
+  return document.getElementById('m-problem').value;
+}
+
+async function generateSimilar() {
+  const problem = getProblemText();
+  const unit = document.getElementById('m-unit').value;
+  const type = document.getElementById('m-type').value;
+  if(!problem) { alert('문제 내용을 먼저 입력하세요'); return; }
+
+  const area = document.getElementById('m-similar-area');
+  area.innerHTML = `<div class="loading"><div class="spinner"></div><span>유사문제 생성 중<span class="loading-dots"></span></span></div>`;
+
+  const apiKey = getApiKey();
+  if(!apiKey) { area.innerHTML = showApiKeyPrompt(); return; }
+
+  try {
+    const data = await apiFetch({
+      model:'claude-sonnet-4-20250514',
+      max_tokens:1000,
+      messages:[{role:'user',content:`수학 선생님을 위한 유사문제를 만들어주세요.
+
+원래 문제: ${problem}
+단원: ${unit}
+오류 유형: ${type}
+
+위 문제와 같은 개념을 다루지만 숫자나 조건이 다른 유사문제 2개를 만들어주세요.
+각 문제에 힌트도 1줄씩 포함해주세요.
+형식: "유사문제 1: ...\n힌트: ...\n\n유사문제 2: ...\n힌트: ..."`}]
+    });
+    const text = data.content.map(c=>c.text||'').join('');
+    area.innerHTML = `<div class="entry-similar"><div class="entry-similar-title">🔁 AI 생성 유사문제</div><pre style="white-space:pre-wrap;font-family:inherit;font-size:12px;line-height:1.8">${text}</pre></div>`;
+    document.getElementById('m-problem').dataset.similar = text;
+  } catch(e) {
+    area.innerHTML = `<div class="alert alert-warn">유사문제 생성 실패: ${e.message}</div>`;
+  }
+}
+
+function saveManualEntry() {
+  const student = state.selectedStudent.m;
+  const exam = document.getElementById('m-exam').value;
+  const num = document.getElementById('m-num').value;
+  if(!student || !exam || !num) { alert('학생, 시험명, 문제번호는 필수입니다'); return; }
+
+  state.entries.push({
+    id: state.nextId++,
+    student, exam,
+    unit: document.getElementById('m-unit').value,
+    type: document.getElementById('m-type').value,
+    num, diff: document.getElementById('m-diff').value,
+    problem: getProblemText(),
+    memo: document.getElementById('m-memo').value,
+    similar: document.getElementById('m-problem').dataset.similar || '',
+    date: new Date().toISOString().slice(0,10)
+  });
+  saveState();
+  alert('✅ 저장되었습니다');
+  document.getElementById('m-num').value = '';
+  document.getElementById('m-problem').value = '';
+  const fromImg = document.getElementById('m-problem-from-img');
+  if(fromImg) fromImg.value = '';
+  document.getElementById('m-img-preview').innerHTML = '';
+  document.getElementById('m-img-ocr-result').innerHTML = '';
+  document.getElementById('m-memo').value = '';
+  document.getElementById('m-similar-area').innerHTML = '';
+}
+
+// ====== LIST ======
+function renderStats() {
+  const total = state.entries.length;
+  const students = [...new Set(state.entries.map(e=>e.student))].length;
+  const exams = [...new Set(state.entries.map(e=>e.exam))].length;
+  const hard = state.entries.filter(e=>e.diff==='상').length;
+  document.getElementById('stat-bar').innerHTML = `
+    <div class="stat"><div class="stat-num">${total}</div><div class="stat-label">전체 오답</div></div>
+    <div class="stat"><div class="stat-num">${students}</div><div class="stat-label">학생 수</div></div>
+    <div class="stat"><div class="stat-num">${exams}</div><div class="stat-label">시험 수</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--red)">${hard}</div><div class="stat-label">상 난이도</div></div>`;
+}
+
+function renderList() {
+  const fGrade   = document.getElementById('filter-grade')?.value || '';
+  const fStudent = document.getElementById('filter-student').value;
+  const fUnit    = document.getElementById('filter-unit').value;
+  const fDiff    = document.getElementById('filter-diff').value;
+
+  // 학년 필터: 해당 학년 학생 목록 추출
+  const gradeStudents = fGrade
+    ? state.students.filter(s=>studentGrade(s)===fGrade).map(s=>studentName(s))
+    : null;
+
+  let filtered = state.entries.filter(e=>
+    (!gradeStudents || gradeStudents.includes(e.student)) &&
+    (!fStudent || e.student===fStudent) &&
+    (!fUnit    || e.unit===fUnit) &&
+    (!fDiff    || e.diff===fDiff)
+  );
+  document.getElementById('list-count').textContent = `총 ${filtered.length}개`;
+
+  const typeCol = {'계산 실수':'#dc2626','개념 미숙':'#7c3aed','문제 이해':'#d97706','풀이 오류':'#2563eb','시간 부족':'#16a34a'};
+  const diffTag = d=>`<span class="tag tag-diff-${d}">${d}</span>`;
+
+  document.getElementById('entry-list').innerHTML = filtered.length ? filtered.map(e=>{
+    const stu   = state.students.find(s=>studentName(s)===e.student);
+    const grade = stu ? studentGrade(stu) : '';
+    const gc    = gradeColor(grade);
+    return `
+    <div class="entry-card">
+      <div class="entry-header">
+        <div class="entry-tags">
+          ${grade ? `<span style="background:${gc.bg};color:${gc.text};padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600">${grade}</span>` : ''}
+          <span style="font-weight:600;font-size:13px">${e.student}</span>
+          <span style="font-size:12px;color:var(--text-sub)">${e.exam} · ${e.num}</span>
+          <span class="tag tag-unit">${e.unit}</span>
+          <span class="tag" style="background:${typeCol[e.type]+'22'};color:${typeCol[e.type]}">${e.type}</span>
+          ${diffTag(e.diff)}
+        </div>
+        <button class="btn btn-sm btn-red" onclick="deleteEntry(${e.id})">삭제</button>
+      </div>
+      ${e.problem?`<div style="font-size:12px;margin-bottom:4px">${e.problem}</div>`:''}
+      ${e.memo?`<div class="entry-memo">💡 ${e.memo}</div>`:''}
+      ${e.similar?`<div class="entry-similar"><div class="entry-similar-title">🔁 유사문제</div>${e.similar}</div>`:''}
+      ${e.teacherMemo?`<div class="entry-memo" style="background:#fef3c7;border-color:#fcd34d">📌 ${e.teacherMemo}</div>`:''}
+    </div>`;
+  }).join('') : '<div style="text-align:center;padding:40px;color:var(--text-sub);font-size:13px">오답 데이터가 없습니다</div>';
+
+  updateSelects();
+}
+
+function deleteEntry(id) {
+  if(!confirm('삭제하시겠습니까?')) return;
+  state.entries = state.entries.filter(e=>e.id!==id);
+  saveState();
+  renderStats(); renderList();
+}
+
+// ====== PDF ======
+function renderPdfPreview() {
+  const student = document.getElementById('pdf-student').value;
+  const unit = document.getElementById('pdf-unit').value;
+  const includeSimilar = document.getElementById('pdf-similar').value === 'yes';
+  if(!student) { document.getElementById('pdf-preview').innerHTML = '<div class="alert alert-info" style="max-width:400px">학생을 선택하면 오답노트 미리보기가 표시됩니다.</div>'; return; }
+
+  let entries = state.entries.filter(e=>e.student===student && (!unit||e.unit===unit));
+  if(!entries.length) { document.getElementById('pdf-preview').innerHTML = '<div class="alert alert-warn">선택한 조건의 오답이 없습니다.</div>'; return; }
+
+  const today = new Date().toLocaleDateString('ko-KR');
+  document.getElementById('pdf-preview').innerHTML = `
+    <div class="pdf-card" id="print-area">
+      <div class="pdf-header">
+        <h2>📝 ${student} 오답노트</h2>
+        <p>${unit||'전체 단원'} · 총 ${entries.length}개 오답 · 출력일: ${today}</p>
+      </div>
+      <div class="pdf-body">
+        ${entries.map((e,i)=>`
+          <div class="pdf-entry">
+            <div class="pdf-entry-num">오답 ${i+1} · ${e.unit} ${e.num} · 난이도: ${e.diff} · 유형: ${e.type}</div>
+            <div class="pdf-entry-content">
+              <b>📌 문제:</b> ${e.problem||'(내용 미입력)'}<br>
+              <b>❌ 오답 원인:</b> ${e.memo||'(메모 없음)'}
+            </div>
+            ${includeSimilar && e.similar ? `
+              <div class="pdf-entry-similar">
+                <b>🔁 유사문제 (다시 풀어보세요)</b><br>${e.similar}
+                <div class="answer-box">내 풀이: </div>
+              </div>` : ''}
+          </div>`).join('')}
+        <div style="margin-top:20px;font-size:11px;color:var(--text-sub);text-align:center;border-top:1px solid var(--gray-border);padding-top:12px">
+          AI 수학 오답노트 시스템 · ${today}
+        </div>
+      </div>
+    </div>`;
+}
+
+function printPdf() {
+  const printArea = document.getElementById('print-area');
+  if(!printArea) { alert('먼저 학생을 선택해주세요'); return; }
+  const w = window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8">
+    <title>오답노트</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700&display=swap');
+      *{box-sizing:border-box;margin:0;padding:0}
+      body{font-family:'Noto Sans KR',sans-serif;padding:20px;color:#111}
+      .pdf-header{background:#1e40af;color:#fff;padding:16px 20px;border-radius:8px 8px 0 0}
+      .pdf-header h2{font-size:18px;font-weight:700}
+      .pdf-header p{font-size:12px;opacity:.85;margin-top:4px}
+      .pdf-body{padding:16px;border:2px solid #1e40af;border-top:none;border-radius:0 0 8px 8px}
+      .pdf-entry{border:1px solid #e5e7eb;border-radius:6px;padding:14px;margin-bottom:12px;break-inside:avoid}
+      .pdf-entry-num{font-size:11px;font-weight:700;color:#1e40af;margin-bottom:8px}
+      .pdf-entry-content{font-size:13px;line-height:1.8}
+      .pdf-entry-similar{background:#f9fafb;border:1px solid #d1fae5;border-radius:6px;padding:10px;margin-top:10px;font-size:12px;line-height:1.8}
+      .answer-box{border:1.5px dashed #d1d5db;border-radius:6px;padding:10px;margin-top:8px;min-height:70px;font-size:12px;color:#9ca3af}
+      .footer{margin-top:16px;font-size:11px;color:#9ca3af;text-align:center;border-top:1px solid #e5e7eb;padding-top:10px}
+      @media print{@page{margin:15mm}button{display:none!important}}
+    </style></head><body>
+    ${printArea.innerHTML}
+    <br><button onclick="window.print()" style="padding:10px 20px;background:#1e40af;color:#fff;border:none;border-radius:6px;font-size:14px;cursor:pointer;font-family:inherit">🖨️ 인쇄 / PDF 저장</button>
+  </body></html>`);
+  w.document.close();
+}
+
+// ====== EXCEL / CSV UPLOAD ======
+function handleExcelDrop(e) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if(file) processExcelFile(file);
+}
+function handleExcelSelect(e) {
+  const file = e.target.files[0];
+  if(file) processExcelFile(file);
+}
+
+function processExcelFile(file) {
+  const resultEl = document.getElementById('excel-result');
+  resultEl.innerHTML = `<div class="loading"><div class="spinner"></div><span>파일 읽는 중...</span></div>`;
+  const ext = file.name.split('.').pop().toLowerCase();
+
+  if(ext === 'csv') {
+    const reader = new FileReader();
+    reader.onload = ev => parseCSV(ev.target.result);
+    reader.readAsText(file, 'UTF-8');
+  } else {
+    // xlsx: use SheetJS
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    script.onload = () => {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const wb = XLSX.read(ev.target.result, {type:'array'});
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const csv = XLSX.utils.sheet_to_csv(ws);
+        parseCSV(csv);
+      };
+      reader.readAsArrayBuffer(file);
+    };
+    if(!window.XLSX) document.head.appendChild(script);
+    else {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const wb = XLSX.read(ev.target.result, {type:'array'});
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        parseCSV(XLSX.utils.sheet_to_csv(ws));
+      };
+      reader.readAsArrayBuffer(file);
+    }
+  }
+}
+
+function parseCSV(text) {
+  const resultEl = document.getElementById('excel-result');
+  const lines = text.split('\n').filter(l=>l.trim());
+  if(lines.length < 2) { resultEl.innerHTML = `<div class="alert alert-warn">데이터가 없습니다. 헤더 포함 2행 이상이어야 합니다.</div>`; return; }
+
+  const newStudents = new Set();
+  const newEntries = [];
+  const errors = [];
+
+  lines.slice(1).forEach((line, idx) => {
+    const cols = line.split(',').map(c=>c.trim().replace(/^"|"$/g,''));
+    const [name, exam, unit, num, type, diff, problem, memo] = cols;
+    if(!name || !exam || !unit || !num) {
+      errors.push(`${idx+2}행: 필수항목 누락 (이름/시험명/단원/문제번호)`);
+      return;
+    }
+    newStudents.add(name);
+    newEntries.push({
+      id: state.nextId++,
+      student: name, exam, unit, num,
+      type: type || '미분류',
+      diff: ['하','중','상'].includes(diff) ? diff : '중',
+      problem: problem || '',
+      memo: memo || '',
+      similar: '',
+      date: new Date().toISOString().slice(0,10)
+    });
+  });
+
+  // Merge into state
+  newStudents.forEach(s=>{ if(!state.students.includes(s)) state.students.push(s); });
+  state.entries.push(...newEntries);
+  saveState();
+
+  resultEl.innerHTML = `
+    <div class="alert alert-success">
+      ✅ <b>학생 ${newStudents.size}명</b>, <b>오답 ${newEntries.length}개</b> 불러오기 완료!
+      ${errors.length ? `<br>⚠️ 건너뛴 행: ${errors.length}개 (필수항목 누락)` : ''}
+    </div>
+    ${errors.length ? `<div style="font-size:11px;color:var(--text-sub);margin-top:6px">${errors.join('<br>')}</div>` : ''}`;
+
+  renderChips();
+  updateSelects();
+  renderCurrentStudentList();
+}
+
+function downloadSampleCSV() {
+  const csv = `학생이름,시험명,단원,문제번호,유형,난이도,문제내용,메모
+김민준,3월 단원평가,방정식,5번,계산 실수,중,이차방정식 x²-5x+6=0을 풀어라,부호 실수
+이서연,3월 단원평가,함수,8번,개념 미숙,상,합성함수 계산,합성함수 순서 혼동
+박지호,3월 단원평가,수와 연산,2번,풀이 오류,하,분수 계산,`;
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '오답노트_샘플.csv';
+  a.click();
+}
+
+function addBulkStudents() {
+  const raw = document.getElementById('bulk-names').value;
+  const lines = raw.split(/[,\n]/).map(n=>n.trim()).filter(n=>n);
+  if(!lines.length) return;
+  let added = 0;
+  const gradePattern = /^(초[1-6]|중[1-3]|고[1-3])\s+(.+)$/;
+  lines.forEach(line => {
+    const match = line.match(gradePattern);
+    const name  = match ? match[2].trim() : line;
+    const grade = match ? match[1] : '';
+    if(!state.students.find(s=>studentName(s)===name)) {
+      state.students.push({name, grade});
+      added++;
+    }
+  });
+  saveState();
+  document.getElementById('bulk-result').innerHTML =
+    `<div class="alert alert-success">✅ ${added}명 추가 완료 (중복 ${lines.length-added}명 제외)</div>`;
+  document.getElementById('bulk-names').value = '';
+  renderChips(); updateSelects(); renderCurrentStudentList();
+}
+
+function renderCurrentStudentList() {
+  const el = document.getElementById('current-student-list');
+  const badge = document.getElementById('student-count-badge');
+  if(!el) return;
+  badge.textContent = `(${state.students.length}명)`;
+  if(!state.students.length) {
+    el.innerHTML = '<div style="font-size:13px;color:var(--text-sub)">등록된 학생이 없습니다.</div>';
+    return;
+  }
+  el.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:8px">` +
+    state.students.map(s => {
+      const name  = studentName(s);
+      const grade = studentGrade(s);
+      const gc    = gradeColor(grade);
+      return `<div style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;background:var(--gray-light);border-radius:20px;font-size:13px">
+        ${grade?`<span style="background:${gc.bg};color:${gc.text};padding:1px 5px;border-radius:3px;font-size:11px;font-weight:600">${grade}</span>`:''}
+        ${name}
+        <span onclick="removeStudent('${name}')" style="cursor:pointer;color:var(--red);font-size:14px;line-height:1">×</span>
+      </div>`;
+    }).join('') + '</div>';
+}
+
+function removeStudent(name) {
+  state.students = state.students.filter(s=>studentName(s)!==name);
+  saveState();
+  renderChips(); updateSelects(); renderCurrentStudentList();
+}
+
+function clearAllStudents() {
+  if(!confirm('학생 목록과 오답 데이터를 모두 초기화할까요?')) return;
+  state.students = []; state.entries = []; state.nextId = 1;
+  state.selectedStudent = {up:null,m:null};
+  saveState();
+  renderChips(); updateSelects(); renderCurrentStudentList();
+  document.getElementById('excel-result').innerHTML = '';
+  document.getElementById('bulk-result').innerHTML = '';
+}
+// ====== 시험지 보관함 ======
+function handleLibDrop(e) {
+  e.preventDefault();
+  document.getElementById('lib-upload-zone').classList.remove('drag');
+  const files = [...e.dataTransfer.files].filter(f=>f.type.startsWith('image/'));
+  files.forEach(loadLibImage);
+}
+function handleLibImgSelect(e) { [...e.target.files].forEach(loadLibImage); }
+
+function loadLibImage(file) {
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const data = { src: ev.target.result, name: file.name, page: state.libImages.length + 1 };
+    state.libImages.push(data);
+    renderLibPreviews();
+  };
+  reader.readAsDataURL(file);
+}
+
+function renderLibPreviews() {
+  const area = document.getElementById('lib-img-previews');
+  area.innerHTML = state.libImages.map((img, i) => `
+    <div style="position:relative;display:inline-block">
+      <img src="${img.src}" style="width:100px;height:130px;object-fit:cover;border-radius:var(--radius);border:1px solid var(--gray-border)">
+      <div style="position:absolute;top:4px;left:4px;background:var(--primary);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:3px">${img.page}쪽</div>
+      <button onclick="removeLibImage(${i})" style="position:absolute;top:4px;right:4px;background:var(--red);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:11px;cursor:pointer;line-height:1">×</button>
+    </div>`).join('');
+}
+
+function removeLibImage(idx) {
+  state.libImages.splice(idx, 1);
+  state.libImages.forEach((img, i) => img.page = i + 1);
+  renderLibPreviews();
+}
+
+function saveExamToLibrary() {
+  const exam = document.getElementById('lib-exam').value.trim();
+  if(!exam) { alert('시험명을 입력해주세요'); return; }
+  const entry = {
+    id: Date.now(),
+    exam,
+    cls:    document.getElementById('lib-class').value.trim(),
+    date:   document.getElementById('lib-date').value,
+    unit:   document.getElementById('lib-unit').value,
+    memo:   document.getElementById('lib-memo').value.trim(),
+    pages:  state.libImages.map(img => ({ page: img.page, src: img.src, name: img.name })),
+    wrongEntries: [],   // 나중에 오답 지정 시 연결됨
+    savedAt: new Date().toISOString().slice(0,10)
+  };
+  state.library.push(entry);
+  saveLibrary();
+
+  // 폼 초기화
+  document.getElementById('lib-exam').value = '';
+  document.getElementById('lib-class').value = '';
+  document.getElementById('lib-date').value = '';
+  document.getElementById('lib-memo').value = '';
+  document.getElementById('lib-img-previews').innerHTML = '';
+  state.libImages = [];
+
+  alert(`✅ "${exam}" 시험지가 보관함에 저장됐습니다!`);
+  renderLibrary();
+}
+
+function renderLibrary() {
+  const badge = document.getElementById('lib-count-badge');
+  if(badge) badge.textContent = `(${state.library.length}개)`;
+  const el = document.getElementById('lib-list');
+  if(!el) return;
+
+  if(!state.library.length) {
+    el.innerHTML = `<div style="text-align:center;padding:32px;color:var(--text-sub);font-size:13px">
+      저장된 시험지가 없습니다.<br>위에서 시험지를 등록해주세요.
+    </div>`;
+    return;
+  }
+
+  el.innerHTML = [...state.library].reverse().map(item => {
+    const imgCount = item.pages?.length || 0;
+    const wrongCount = state.entries.filter(e => e.sourceExamId === item.id).length;
+    return `
+      <div style="border:1px solid var(--gray-border);border-radius:var(--radius);padding:14px;margin-bottom:10px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:border .15s"
+        onmouseover="this.style.borderColor='#93c5fd'" onmouseout="this.style.borderColor='var(--gray-border)'"
+        onclick="openLibDetail(${item.id})">
+        <!-- 썸네일 -->
+        <div style="flex-shrink:0">
+          ${item.pages?.length ? `<img src="${item.pages[0].src}" style="width:60px;height:78px;object-fit:cover;border-radius:4px;border:1px solid var(--gray-border)">` :
+            `<div style="width:60px;height:78px;background:var(--gray-light);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:20px">📄</div>`}
+        </div>
+        <!-- 정보 -->
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14px;font-weight:600;margin-bottom:4px">${item.exam}</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+            ${item.cls ? `<span style="font-size:11px;background:#ede9fe;color:#5b21b6;padding:2px 7px;border-radius:4px">${item.cls}</span>` : ''}
+            <span style="font-size:11px;background:var(--gray-light);color:var(--text-sub);padding:2px 7px;border-radius:4px">${item.unit}</span>
+            ${item.date ? `<span style="font-size:11px;color:var(--text-sub)">${item.date}</span>` : ''}
+          </div>
+          <div style="display:flex;gap:12px;font-size:12px;color:var(--text-sub)">
+            <span>📄 ${imgCount}장</span>
+            <span style="color:${wrongCount>0?'var(--red)':'var(--text-sub)'}">❌ 오답 ${wrongCount}개 연결됨</span>
+            ${item.memo ? `<span>📝 ${item.memo}</span>` : ''}
+          </div>
+        </div>
+        <!-- 버튼 -->
+        <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+          <button class="btn btn-sm btn-primary" onclick="event.stopPropagation();openLibDetail(${item.id})">📖 열기</button>
+          <button class="btn btn-sm btn-red" onclick="event.stopPropagation();deleteLibItem(${item.id})">삭제</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function openLibDetail(id) {
+  const item = state.library.find(i => i.id === id);
+  if(!item) return;
+  const wrongList = state.entries.filter(e => e.sourceExamId === id);
+  const modal = document.getElementById('lib-detail-modal');
+  document.getElementById('lib-modal-title').textContent = `📄 ${item.exam}`;
+
+  document.getElementById('lib-modal-body').innerHTML = `
+    <!-- 시험 정보 -->
+    <div style="background:var(--primary-light);border-radius:var(--radius);padding:12px 16px;margin-bottom:16px;font-size:13px;color:#1e3a8a">
+      <b>${item.exam}</b> &nbsp;·&nbsp; ${item.cls||''} &nbsp;·&nbsp; ${item.unit} &nbsp;·&nbsp; ${item.date||'날짜 미입력'}
+      ${item.memo ? `<br><span style="font-size:12px">${item.memo}</span>` : ''}
+    </div>
+
+    <!-- 시험지 이미지 페이지 -->
+    ${item.pages?.length ? `
+    <div style="margin-bottom:20px">
+      <div style="font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px">시험지 이미지 (${item.pages.length}장)</div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px">
+        ${item.pages.map(p=>`
+          <div style="text-align:center">
+            <img src="${p.src}" style="width:140px;height:180px;object-fit:contain;border:1px solid var(--gray-border);border-radius:var(--radius);background:#f9fafb;display:block">
+            <div style="font-size:11px;color:var(--text-sub);margin-top:4px">${p.page}쪽</div>
+          </div>`).join('')}
+      </div>
+    </div>` : ''}
+
+    <!-- 오답 지정 섹션 -->
+    <div style="margin-bottom:16px">
+      <div style="font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px">오답 지정</div>
+      <div class="alert alert-info" style="margin-bottom:12px;font-size:12px">
+        이 시험지에서 틀린 문제를 지정하면 오답노트와 자동으로 연결됩니다.
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px">
+        <div class="form-group"><label>학생</label>
+          <select id="lib-wrong-student" style="height:32px;padding:0 8px;border:1px solid var(--gray-border);border-radius:var(--radius);font-size:13px;font-family:inherit">
+            <option value="">학생 선택</option>
+            ${state.students.map(s=>`<option>${s}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group"><label>쪽</label><input id="lib-wrong-page" type="number" min="1" placeholder="1" style="width:60px;height:32px;padding:0 8px;border:1px solid var(--gray-border);border-radius:var(--radius);font-size:13px"></div>
+        <div class="form-group"><label>문제번호</label><input id="lib-wrong-num" type="text" placeholder="8번" style="width:70px;height:32px;padding:0 8px;border:1px solid var(--gray-border);border-radius:var(--radius);font-size:13px"></div>
+        <div class="form-group"><label>오류유형</label>
+          <select id="lib-wrong-type" style="height:32px;padding:0 8px;border:1px solid var(--gray-border);border-radius:var(--radius);font-size:13px;font-family:inherit">
+            <option>계산 실수</option><option>개념 미숙</option><option>문제 이해</option><option>풀이 오류</option><option>시간 부족</option>
+          </select>
+        </div>
+        <div class="form-group"><label>난이도</label>
+          <select id="lib-wrong-diff" style="height:32px;padding:0 8px;border:1px solid var(--gray-border);border-radius:var(--radius);font-size:13px;font-family:inherit">
+            <option>하</option><option selected>중</option><option>상</option>
+          </select>
+        </div>
+        <div class="form-group"><label>오답원인 메모</label><input id="lib-wrong-memo" type="text" placeholder="왜 틀렸는지" style="width:160px;height:32px;padding:0 8px;border:1px solid var(--gray-border);border-radius:var(--radius);font-size:13px"></div>
+        <button class="btn btn-primary btn-sm" style="height:32px" onclick="addWrongFromLib(${id})">➕ 오답 추가</button>
+      </div>
+    </div>
+
+    <!-- 이 시험지에 연결된 오답 목록 -->
+    <div>
+      <div style="font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">연결된 오답 (${wrongList.length}개)</div>
+      ${wrongList.length ? wrongList.map(e=>`
+        <div style="border:1px solid var(--gray-border);border-radius:var(--radius);padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <span style="font-size:13px;font-weight:600">${e.student}</span>
+            <span style="font-size:12px;color:var(--text-sub)">${e.num} (${e.page||''}쪽)</span>
+            <span style="background:#ede9fe;color:#5b21b6;padding:2px 7px;border-radius:4px;font-size:11px">${e.unit}</span>
+            <span style="background:#fee2e2;color:#991b1b;padding:2px 7px;border-radius:4px;font-size:11px">${e.type}</span>
+            ${e.memo?`<span style="font-size:12px;color:var(--text-sub)">💡 ${e.memo}</span>`:''}
+          </div>
+          <button class="btn btn-sm btn-red" onclick="deleteEntry(${e.id});openLibDetail(${id})">삭제</button>
+        </div>`).join('')
+      : `<div style="text-align:center;padding:16px;color:var(--text-sub);font-size:13px">아직 오답이 지정되지 않았습니다</div>`}
+    </div>`;
+
+  modal.style.display = 'block';
+}
+
+function addWrongFromLib(examId) {
+  const item = state.library.find(i=>i.id===examId);
+  const student = document.getElementById('lib-wrong-student').value;
+  const num     = document.getElementById('lib-wrong-num').value.trim();
+  const page    = document.getElementById('lib-wrong-page').value;
+  if(!student || !num) { alert('학생과 문제번호는 필수입니다'); return; }
+
+  state.entries.push({
+    id: state.nextId++,
+    student,
+    exam: item.exam,
+    unit: item.unit,
+    type: document.getElementById('lib-wrong-type').value,
+    num, page,
+    diff: document.getElementById('lib-wrong-diff').value,
+    problem: `${item.exam} ${page}쪽 ${num}`,
+    memo: document.getElementById('lib-wrong-memo').value,
+    similar: '',
+    sourceExamId: examId,
+    date: item.date || new Date().toISOString().slice(0,10)
+  });
+  saveState();
+
+  // 입력 초기화
+  document.getElementById('lib-wrong-num').value = '';
+  document.getElementById('lib-wrong-memo').value = '';
+  document.getElementById('lib-wrong-page').value = '';
+
+  openLibDetail(examId); // 새로고침
+}
+
+function deleteLibItem(id) {
+  if(!confirm('시험지를 삭제할까요? 연결된 오답 데이터는 유지됩니다.')) return;
+  state.library = state.library.filter(i=>i.id!==id);
+  saveLibrary();
+  renderLibrary();
+}
+
+function closeLibModal() {
+  document.getElementById('lib-detail-modal').style.display = 'none';
+  renderLibrary();
+}
+
+// ====== 교재 보관함 ======
+function handleBookPdfDrop(e) {
+  e.preventDefault();
+  document.getElementById('book-upload-zone').classList.remove('drag');
+  const file = [...e.dataTransfer.files].find(f=>f.type==='application/pdf');
+  if(file) loadBookPdf(file);
+}
+function handleBookPdfSelect(e) { if(e.target.files[0]) loadBookPdf(e.target.files[0]); }
+
+function loadBookPdf(file) {
+  const status = document.getElementById('book-pdf-status');
+  status.innerHTML = `<div class="loading"><div class="spinner"></div><span>PDF 읽는 중... (${(file.size/1024/1024).toFixed(1)}MB)</span></div>`;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    state._pendingBookPdf = { name: file.name, data: ev.target.result, size: file.size };
+    status.innerHTML = `<div class="alert alert-success">✅ ${file.name} (${(file.size/1024/1024).toFixed(1)}MB) 준비 완료</div>`;
+  };
+  reader.onerror = () => { status.innerHTML = `<div class="alert alert-warn">❌ 파일 읽기 실패</div>`; };
+  reader.readAsDataURL(file);
+}
+
+function saveBook() {
+  const title = document.getElementById('book-title').value.trim();
+  if(!title) { alert('교재명을 입력해주세요'); return; }
+  const book = {
+    id: Date.now(), title,
+    publisher: document.getElementById('book-publisher').value.trim(),
+    grade:     document.getElementById('book-grade').value,
+    range:     document.getElementById('book-range').value.trim(),
+    savedAt:   new Date().toISOString().slice(0,10),
+    hasPdf:    !!state._pendingBookPdf,
+    pdfName:   state._pendingBookPdf?.name || '',
+    pdfData:   state._pendingBookPdf?.data || null,
+  };
+  try {
+    state.books.push(book);
+    saveBooks();
+  } catch(e) {
+    book.pdfData = null; book.hasPdf = false;
+    state.books[state.books.length-1] = book;
+    saveBooks();
+    alert('⚠️ PDF 용량이 커서 메타정보만 저장됐습니다. PDF는 열 때마다 직접 선택해주세요.');
+  }
+  document.getElementById('book-title').value='';
+  document.getElementById('book-publisher').value='';
+  document.getElementById('book-range').value='';
+  document.getElementById('book-pdf-status').innerHTML='';
+  state._pendingBookPdf = null;
+  alert(`✅ "${title}" 교재가 저장됐습니다!`);
+  renderBookList();
+}
+
+function renderBookList() {
+  const badge = document.getElementById('book-count-badge');
+  if(badge) badge.textContent = `(${state.books.length}권)`;
+  const el = document.getElementById('book-list');
+  if(!el) return;
+  if(!state.books.length) {
+    el.innerHTML = `<div style="text-align:center;padding:28px 0;color:var(--text-sub);font-size:13px">등록된 교재가 없습니다.</div>`;
+    return;
+  }
+  el.innerHTML = [...state.books].reverse().map(book => {
+    const wrongCount = state.entries.filter(e=>e.sourceBookId===book.id).length;
+    return `
+      <div style="border:1px solid var(--gray-border);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:border .15s"
+        onmouseover="this.style.borderColor='#93c5fd'" onmouseout="this.style.borderColor='var(--gray-border)'"
+        onclick="selectBook(${book.id})">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:600;margin-bottom:4px">📕 ${book.title}</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">
+              <span style="font-size:11px;background:#ede9fe;color:#5b21b6;padding:2px 7px;border-radius:4px">${book.grade}</span>
+              ${book.publisher?`<span style="font-size:11px;background:var(--gray-light);color:var(--text-sub);padding:2px 7px;border-radius:4px">${book.publisher}</span>`:''}
+            </div>
+            <div style="font-size:12px;color:var(--text-sub);display:flex;gap:10px">
+              <span>${book.hasPdf&&book.pdfData?'📄 PDF 저장됨':'📄 PDF 없음 (열 때 선택)'}</span>
+              <span style="color:${wrongCount>0?'var(--red)':'var(--text-sub)'}">❌ 오답 ${wrongCount}개</span>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;margin-left:10px">
+            <button class="btn btn-sm btn-primary" onclick="event.stopPropagation();selectBook(${book.id})">📖 열기</button>
+            <button class="btn btn-sm btn-red" onclick="event.stopPropagation();deleteBook(${book.id})">삭제</button>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function selectBook(id) {
+  const book = state.books.find(b=>b.id===id);
+  if(!book) return;
+  const wrongList = state.entries.filter(e=>e.sourceBookId===id);
+  const card = document.getElementById('book-detail-card');
+  card.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:15px;font-weight:700">📕 ${book.title}</div>
+        <div style="font-size:12px;color:var(--text-sub);margin-top:2px">${book.grade} · ${book.publisher||''} · 오답 ${wrongList.length}개</div>
+      </div>
+      ${book.hasPdf && book.pdfData
+        ? `<button class="btn btn-primary btn-sm" onclick="openPdfViewer(${id})">🔍 PDF 뷰어로 열기</button>`
+        : `<div><div style="font-size:11px;color:var(--text-sub);margin-bottom:4px">PDF 파일 선택 후 열기</div>
+           <input type="file" accept=".pdf" onchange="openPdfViewerFromFile(event,${id})" style="font-size:12px"></div>`}
+    </div>
+    <div style="background:var(--amber-light);border:1px solid #fcd34d;border-radius:var(--radius);padding:10px 14px;margin-bottom:14px;font-size:12px;color:#92400e">
+      💡 PDF 뷰어에서 페이지를 보면서 오답 지정하거나, 아래에서 직접 입력하세요.
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">오답 직접 지정</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+        <div class="form-group"><label>학생</label>
+          <select id="book-wrong-student" style="height:32px;padding:0 8px;border:1px solid var(--gray-border);border-radius:var(--radius);font-size:13px;font-family:inherit">
+            <option value="">선택</option>${state.students.map(s=>`<option>${s}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group"><label>쪽</label><input id="book-wrong-page" type="number" min="1" placeholder="15" style="width:60px;height:32px;padding:0 8px;border:1px solid var(--gray-border);border-radius:var(--radius);font-size:13px"></div>
+        <div class="form-group"><label>문제번호</label><input id="book-wrong-num" type="text" placeholder="3번" style="width:70px;height:32px;padding:0 8px;border:1px solid var(--gray-border);border-radius:var(--radius);font-size:13px"></div>
+        <div class="form-group"><label>단원</label>
+          <select id="book-wrong-unit" style="height:32px;padding:0 8px;border:1px solid var(--gray-border);border-radius:var(--radius);font-size:13px;font-family:inherit">
+            <option>수와 연산</option><option>방정식</option><option>함수</option><option>도형</option><option>통계</option><option>확률</option><option>기타</option>
+          </select>
+        </div>
+        <div class="form-group"><label>유형</label>
+          <select id="book-wrong-type" style="height:32px;padding:0 8px;border:1px solid var(--gray-border);border-radius:var(--radius);font-size:13px;font-family:inherit">
+            <option>계산 실수</option><option>개념 미숙</option><option>문제 이해</option><option>풀이 오류</option><option>시간 부족</option>
+          </select>
+        </div>
+        <div class="form-group"><label>난이도</label>
+          <select id="book-wrong-diff" style="height:32px;padding:0 8px;border:1px solid var(--gray-border);border-radius:var(--radius);font-size:13px;font-family:inherit">
+            <option>하</option><option selected>중</option><option>상</option>
+          </select>
+        </div>
+        <div class="form-group" style="flex:1"><label>오답 원인</label>
+          <input id="book-wrong-memo" type="text" placeholder="왜 틀렸는지" style="width:100%;height:32px;padding:0 8px;border:1px solid var(--gray-border);border-radius:var(--radius);font-size:13px">
+        </div>
+        <button class="btn btn-primary btn-sm" style="height:32px" onclick="addWrongFromBook(${id})">➕ 추가</button>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:11px;font-weight:700;color:var(--text-sub);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">연결된 오답 (${wrongList.length}개)</div>
+      ${wrongList.length ? wrongList.map(e=>`
+        <div style="border:1px solid var(--gray-border);border-radius:var(--radius);padding:9px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+            <b style="font-size:13px">${e.student}</b>
+            <span style="font-size:12px;color:var(--primary);font-weight:500">${e.page}쪽 ${e.num}</span>
+            <span style="background:#ede9fe;color:#5b21b6;padding:2px 6px;border-radius:4px;font-size:11px">${e.unit}</span>
+            <span style="background:#fee2e2;color:#991b1b;padding:2px 6px;border-radius:4px;font-size:11px">${e.type}</span>
+            ${e.memo?`<span style="font-size:11px;color:var(--text-sub)">💡 ${e.memo}</span>`:''}
+          </div>
+          <button class="btn btn-sm btn-red" onclick="deleteEntry(${e.id});selectBook(${id})">삭제</button>
+        </div>`).join('')
+      : `<div style="text-align:center;padding:16px;color:var(--text-sub);font-size:13px">아직 지정된 오답이 없습니다</div>`}
+    </div>`;
+}
+
+function addWrongFromBook(bookId) {
+  const book = state.books.find(b=>b.id===bookId);
+  const student = document.getElementById('book-wrong-student').value;
+  const page    = document.getElementById('book-wrong-page').value;
+  const num     = document.getElementById('book-wrong-num').value.trim();
+  if(!student||!num||!page) { alert('학생, 쪽수, 문제번호는 필수입니다'); return; }
+  state.entries.push({
+    id: state.nextId++, student, exam: book.title,
+    unit: document.getElementById('book-wrong-unit').value,
+    type: document.getElementById('book-wrong-type').value,
+    num, page, diff: document.getElementById('book-wrong-diff').value,
+    problem: `${book.title} ${page}쪽 ${num}`,
+    memo: document.getElementById('book-wrong-memo').value,
+    similar: '', sourceBookId: bookId,
+    date: new Date().toISOString().slice(0,10)
+  });
+  saveState();
+  document.getElementById('book-wrong-num').value='';
+  document.getElementById('book-wrong-page').value='';
+  document.getElementById('book-wrong-memo').value='';
+  selectBook(bookId);
+}
+
+function deleteBook(id) {
+  if(!confirm('교재를 삭제할까요? 연결된 오답 데이터는 유지됩니다.')) return;
+  state.books = state.books.filter(b=>b.id!==id);
+  saveBooks();
+  renderBookList();
+  document.getElementById('book-detail-card').innerHTML = `<div style="text-align:center;padding:40px 0;color:var(--text-sub);font-size:13px">👈 교재를 선택해주세요</div>`;
+}
+
+// ====== PDF 뷰어 ======
+async function openPdfViewer(bookId) {
+  const book = state.books.find(b=>b.id===bookId);
+  if(!book?.pdfData) return;
+  state.viewer.bookId = bookId;
+  await initPdfViewer(book.pdfData, book.title);
+}
+async function openPdfViewerFromFile(event, bookId) {
+  const file = event.target.files[0];
+  if(!file) return;
+  state.viewer.bookId = bookId;
+  const reader = new FileReader();
+  reader.onload = async ev => { await initPdfViewer(ev.target.result, file.name); };
+  reader.readAsDataURL(file);
+}
+async function initPdfViewer(dataUrl, title) {
+  // PDF.js + 워커 순서대로 로드
+  if(!window.pdfjsLib) {
+    await new Promise((res,rej)=>{
+      const s = document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+      s.onload=res; s.onerror=rej; document.head.appendChild(s);
+    });
+  }
+  // workerSrc 반드시 getDocument 호출 전에 설정
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+  const modal = document.getElementById('book-viewer-modal');
+  modal.style.display='flex';
+  document.getElementById('viewer-title').textContent=title;
+  const sel = document.getElementById('viewer-student');
+  sel.innerHTML='<option value="">학생 선택</option>'+state.students.map(s=>`<option>${s}</option>`).join('');
+  try {
+    const raw = atob(dataUrl.split(',')[1]);
+    const arr = new Uint8Array(raw.length);
+    for(let i=0;i<raw.length;i++) arr[i]=raw.charCodeAt(i);
+    state.viewer.pdfDoc = await pdfjsLib.getDocument({data:arr}).promise;
+    state.viewer.currentPage=1;
+    document.getElementById('viewer-page-total').textContent=state.viewer.pdfDoc.numPages;
+    renderPdfPage(1);
+  } catch(e) { modal.style.display='none'; alert('PDF를 열 수 없습니다: '+e.message); }
+}
+async function renderPdfPage(pageNum) {
+  if(!state.viewer.pdfDoc) return;
+  pageNum = Math.max(1, Math.min(pageNum, state.viewer.pdfDoc.numPages));
+  state.viewer.currentPage=pageNum;
+  document.getElementById('viewer-page-cur').textContent=pageNum;
+  const page = await state.viewer.pdfDoc.getPage(pageNum);
+  const canvas = document.getElementById('pdf-canvas');
+  const scale = Math.min(1.5, (window.innerWidth*0.85)/page.getViewport({scale:1}).width);
+  const viewport = page.getViewport({scale});
+  canvas.width=viewport.width; canvas.height=viewport.height;
+  await page.render({canvasContext:canvas.getContext('2d'), viewport}).promise;
+}
+function changePage(d) { renderPdfPage(state.viewer.currentPage+d); }
+function gotoPage() { const p=parseInt(document.getElementById('viewer-goto').value); if(p){renderPdfPage(p);document.getElementById('viewer-goto').value='';} }
+function closeViewer() { document.getElementById('book-viewer-modal').style.display='none'; state.viewer.pdfDoc=null; }
+function addWrongFromViewer() {
+  const bookId=state.viewer.bookId;
+  const book=state.books.find(b=>b.id===bookId);
+  const student=document.getElementById('viewer-student').value;
+  const num=document.getElementById('viewer-num').value.trim();
+  if(!student||!num){alert('학생과 문제번호를 입력하세요');return;}
+  const page=state.viewer.currentPage;
+  state.entries.push({
+    id:state.nextId++, student, exam:book?.title||'교재',
+    unit:'기타', page, type:document.getElementById('viewer-type').value,
+    num, diff:document.getElementById('viewer-diff').value,
+    problem:`${book?.title||''} ${page}쪽 ${num}`,
+    memo:document.getElementById('viewer-memo').value,
+    similar:'', sourceBookId:bookId,
+    date:new Date().toISOString().slice(0,10)
+  });
+  saveState();
+  document.getElementById('viewer-num').value='';
+  document.getElementById('viewer-memo').value='';
+  const msg=document.getElementById('viewer-added-msg');
+  msg.textContent=`✅ ${student} ${page}쪽 ${num} 추가됨`;
+  msg.style.opacity='1';
+  setTimeout(()=>msg.style.opacity='0',2500);
+}
+
+// ====== 엑셀 내보내기 ======
+function exportExcel() {
+  if(!state.entries.length) { alert('내보낼 오답 데이터가 없습니다.'); return; }
+
+  // CSV 형식으로 생성 (엑셀에서 바로 열림)
+  const headers = ['학년','학생이름','시험명','단원','문제번호','유형','난이도','문제내용','오답원인','유사문제','날짜'];
+  const rows = state.entries.map(e => {
+    const stu = state.students.find(s=>studentName(s)===e.student);
+    return [
+      stu ? studentGrade(stu) : '',
+      e.student, e.exam, e.unit, e.num, e.type, e.diff,
+      (e.problem||'').replace(/,/g,'，').replace(/\n/g,' '),
+      (e.memo||'').replace(/,/g,'，').replace(/\n/g,' '),
+      (e.similar||'').replace(/,/g,'，').replace(/\n/g,' '),
+      e.date
+    ];
+  });
+
+  const csv = [headers, ...rows].map(r => r.map(v=>`"${v}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF' + csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const today = new Date().toISOString().slice(0,10);
+  a.download = `오답노트_전체_${today}.csv`;
+  a.click();
+}
+
+// ====== 학생별 엑셀 내보내기 ======
+function exportStudentExcel(studentName) {
+  const entries = state.entries.filter(e => e.student === studentName);
+  if(!entries.length) { alert('해당 학생의 오답 데이터가 없습니다.'); return; }
+
+  const headers = ['시험명','단원','문제번호','유형','난이도','문제내용','오답원인','유사문제','날짜'];
+  const rows = entries.map(e => [
+    e.exam, e.unit, e.num, e.type, e.diff,
+    (e.problem||'').replace(/,/g,'，').replace(/\n/g,' '),
+    (e.memo||'').replace(/,/g,'，').replace(/\n/g,' '),
+    (e.similar||'').replace(/,/g,'，').replace(/\n/g,' '),
+    e.date
+  ]);
+
+  const csv = [headers, ...rows].map(r => r.map(v=>`"${v}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF' + csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `오답노트_${studentName}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+// ====== INIT ======
+renderChips();
+updateSelects();
+renderStats();
+renderLibrary();
+renderBookList();
+
+// 클라이언트 ID가 내장되어 있으므로 버튼 바로 사용 가능
+document.getElementById('drive-login-btn').innerHTML = `
+  <svg width="14" height="14" viewBox="0 0 24 24" style="flex-shrink:0"><path fill="#fff" d="M12 11h8.533c.044.385.067.78.067 1.184 0 3.37-1.2 6.22-3.2 8.184C15.4 22.31 13.8 23 12 23c-6.075 0-11-4.925-11-11S5.925 1 12 1c2.9 0 5.544 1.123 7.522 2.956l-3.05 3.05C15.26 5.79 13.7 5 12 5c-3.866 0-7 3.134-7 7s3.134 7 7 7c2.73 0 5.1-1.586 6.29-3.9H12v-4z"/></svg>
+  Google Drive 연결`;
+
+if(!getApiKey()) {
+  const banner = document.createElement('div');
+  banner.style.cssText = 'background:#fef3c7;border-bottom:1px solid #fcd34d;padding:8px 24px;font-size:12px;color:#92400e;display:flex;align-items:center;justify-content:space-between';
+  banner.innerHTML = `<span>⚠️ AI 기능을 사용하려면 API 키가 필요합니다. API 키 없이도 직접입력·누적관리·PDF출력은 무료로 사용 가능합니다.</span><button class="btn btn-sm" style="background:#d97706;color:#fff;border-color:#d97706;height:28px;padding:0 10px;font-size:12px" onclick="showApiKeyModal();this.closest('div').remove()">🔑 설정</button>`;
+  document.querySelector('.nav').after(banner);
+}
+</script>
+</body>
+</html>
